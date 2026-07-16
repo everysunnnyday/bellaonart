@@ -240,6 +240,22 @@ header.scrolled{border-color:var(--line)}
 .edu .card h4{font-family:var(--serif);font-size:1.18rem;font-weight:500;margin-top:16px;color:var(--ink)}
 .edu .card p{font-size:.85rem;color:var(--muted);margin-top:4px}
 
+/* 소재·클래스 이미지: 마우스오버 반응(Our Work처럼 살짝 뜨고 이미지 확대) */
+.mat,.edu .card{transition:transform .35s cubic-bezier(.16,1,.3,1)}
+.mat .ph,.edu .card .ph{transition:box-shadow .35s}
+.mat .ph img,.edu .card .ph img{transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.mat:hover,.edu .card:hover{transform:translateY(-6px)}
+.mat:hover .ph,.edu .card:hover .ph{box-shadow:var(--shadow)}
+.mat:hover .ph img,.edu .card:hover .ph img{transform:scale(1.06)}
+
+/* 포트폴리오 이미지 확대 팝업(라이트박스) */
+.gallery a.lb-trigger{cursor:zoom-in}
+.lightbox{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:rgba(43,40,36,.9);padding:clamp(16px,5vw,64px);cursor:zoom-out}
+.lightbox.open{display:flex}
+.lightbox img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:6px;box-shadow:0 30px 80px -24px rgba(0,0,0,.6)}
+.lb-close{position:absolute;top:20px;right:24px;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:1.6rem;line-height:1;cursor:pointer;transition:.2s}
+.lb-close:hover{background:rgba(255,255,255,.28)}
+
 /* ---------- 컨택트 / 푸터 ---------- */
 .contact{background:var(--ink);color:var(--canvas)}
 .contact .eyebrow{color:var(--pink)}
@@ -444,7 +460,7 @@ footer small{color:var(--stone);font-size:.74rem}
   <div class="wrap sec-inner">
     <div class="sec-head reveal">
       <span class="eyebrow">Portfolio</span>
-      <h2 class="section-title">작품 갤러리</h2>
+      <h2 class="section-title">포트폴리오</h2>
       <span class="rule"></span>
     </div>
     <div class="gallery reveal" id="gallery"></div>
@@ -457,9 +473,10 @@ footer small{color:var(--stone);font-size:.74rem}
 <!-- ===== 06 MATERIALS ===== -->
 <section id="material">
   <div class="wrap sec-inner">
-    <div class="sec-head reveal" style="align-items:flex-start;text-align:left">
+    <div class="sec-head reveal">
       <span class="eyebrow">Materials</span>
       <h2 class="section-title">다양한 소재, 벨라온의 감성</h2>
+      <span class="rule"></span>
     </div>
     <div class="grid-auto materials">
       <div class="mat reveal"><div class="ph"><img src="images/meterials/paper.png" alt="페이퍼플라워"></div><p>Paper</p><span>페이퍼플라워</span></div>
@@ -548,6 +565,12 @@ footer small{color:var(--stone);font-size:.74rem}
   <span class="kf-label">카톡 문의</span>
 </a>
 
+<!-- 포트폴리오 이미지 확대 팝업(라이트박스) -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lb-close" id="lbClose" type="button" aria-label="닫기">&times;</button>
+  <img id="lbImg" src="" alt="">
+</div>
+
 <script>
 (function(){
   'use strict';
@@ -559,6 +582,27 @@ footer small{color:var(--stone);font-size:.74rem}
   }, { threshold:.12 }) : null;
   function reveal(el){ if(io){ io.observe(el); } else { el.classList.add('in'); } }
   (document).querySelectorAll('.reveal').forEach(reveal);
+
+  /* ---- 그리드 항목 순차 등장(stagger) — 과하지 않게 ---- */
+  ['.services','.materials','.edu'].forEach(function(sel){
+    document.querySelectorAll(sel).forEach(function(grid){
+      [].slice.call(grid.children).forEach(function(kid,i){
+        if(kid.classList.contains('reveal')) kid.style.transitionDelay=(Math.min(i,6)*0.07)+'s';
+      });
+    });
+  });
+
+  /* ---- 라이트박스(포트폴리오 이미지 확대 팝업) ---- */
+  var lb=document.getElementById('lightbox');
+  function openLightbox(src,alt){ if(!lb) return; var im=document.getElementById('lbImg'); im.src=src; im.alt=alt||''; lb.classList.add('open'); lb.setAttribute('aria-hidden','false'); document.documentElement.style.overflow='hidden'; }
+  function closeLightbox(){ if(!lb) return; lb.classList.remove('open'); lb.setAttribute('aria-hidden','true'); document.documentElement.style.overflow=''; document.getElementById('lbImg').src=''; }
+  try {
+    if(lb){
+      lb.addEventListener('click',function(e){ if(e.target===lb || e.target.id==='lbClose') closeLightbox(); });
+      document.getElementById('lbClose').addEventListener('click',closeLightbox);
+      document.addEventListener('keydown',function(e){ if(e.key==='Escape' && lb.classList.contains('open')) closeLightbox(); });
+    }
+  } catch(e){ console.warn('lightbox init failed', e); }
 
   /* ---- 모바일 햄버거 ---- */
   try {
@@ -597,11 +641,15 @@ footer small{color:var(--stone);font-size:.74rem}
         +'</svg><span class="tag">BELLAON</span></div></a>';
     }
     function imgTile(src){
-      return '<a href="'+src+'" target="_blank" rel="noopener"><div class="ph" style="height:100%"><img src="'+src+'" alt="벨라온 작품"></div></a>';
+      return '<a href="'+src+'" class="lb-trigger" data-full="'+src+'"><div class="ph" style="height:100%"><img src="'+src+'" alt="벨라온 작품"></div></a>';
     }
     var html = portfolio.length ? portfolio.map(imgTile).join('') : Array(PLACEHOLDER_COUNT).fill(0).map(phTile).join('');
     gallery.innerHTML = html;
-    gallery.querySelectorAll('a').forEach(function(el){ el.classList.add('reveal'); reveal(el); });
+    gallery.querySelectorAll('a').forEach(function(el,i){ el.classList.add('reveal'); el.style.transitionDelay=(Math.min(i,6)*0.07)+'s'; reveal(el); });
+    // 이미지 클릭 → 라이트박스 팝업(사이트 이탈 없이 크게 보기)
+    gallery.querySelectorAll('a.lb-trigger').forEach(function(a){
+      a.addEventListener('click', function(e){ e.preventDefault(); openLightbox(a.getAttribute('data-full'), '벨라온 작품'); });
+    });
   } catch(e){ console.warn('portfolio init failed', e); }
 
   /* ---- item 8 · 문의 폼(Web3Forms) 제출 ---- */
