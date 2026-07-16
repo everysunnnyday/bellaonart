@@ -1,0 +1,12 @@
+# 내부 작업용 문서(사이트에 배포 안 함)
+이미지_규격_안내.md
+# OS/에디터 임시파일
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 루트에 남은 원본 파일(실제 사용본은 images/·favicon에 있음) — 배포 제외
+/logo.png
+/main_img.png
+/pavicon.ico
+/pavicon.png
