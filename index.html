@@ -222,10 +222,15 @@ header.scrolled{border-color:var(--line)}
 .step p{font-size:.88rem;color:var(--muted)}
 
 /* ---------- 포트폴리오 ---------- */
-.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(14px,1.8vw,22px)}
-.gallery .ph{aspect-ratio:3/4;transition:transform .5s,opacity .4s}
-.gallery a{overflow:hidden;border-radius:8px;display:block}
-.gallery a:hover .ph{transform:scale(1.03)}
+.gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(14px,1.8vw,22px)}
+@media(max-width:900px){.gallery{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.gallery{grid-template-columns:repeat(2,1fr)}}
+.gallery .ph{aspect-ratio:3/4}
+.gallery a{position:relative;overflow:hidden;border-radius:8px;display:block}
+.gallery .ph img{transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.gallery a:hover .ph img{transform:scale(1.05)}
+/* 하단 라이트베이지 그라데이션 + 포트폴리오명 캡션 */
+.gallery .cap{position:absolute;left:0;right:0;bottom:0;padding:32px 16px 14px;font-family:var(--sans);font-size:.92rem;font-weight:500;letter-spacing:.01em;color:var(--ink);background:linear-gradient(to top,rgba(242,238,235,.97) 0%,rgba(242,238,235,.78) 44%,rgba(242,238,235,0) 100%);pointer-events:none}
 
 /* ---------- 소재(Materials) ---------- */
 .materials{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
@@ -627,9 +632,16 @@ footer small{color:var(--stone);font-size:.74rem}
      자리표시 대신 그 사진이 순서대로 채워집니다. (권장 3:4 세로, 900x1200) ---- */
   try {
     var portfolio = [
-      // 예) 'images/portfolio/work-01.jpg', 'images/portfolio/work-02.jpg',
+      {src:'images/portfolio/work-01.png', title:'Pink cafe'},
+      {src:'images/portfolio/work-02.png', title:'호텔행사'},
+      {src:'images/portfolio/work-03.png', title:'국립호남권생물자원관'},
+      {src:'images/portfolio/work-04.png', title:'졸업식 포토존'},
+      {src:'images/portfolio/work-05.png', title:'시장 에바폼 백드롭 작업'},
+      {src:'images/portfolio/work-06.png', title:'무드 로즈 조명'},
+      {src:'images/portfolio/work-07.png', title:'핑크 부케'},
+      {src:'images/portfolio/work-08.png', title:'페스티벌 무대 장식'}
     ];
-    var PLACEHOLDER_COUNT = 4; // 사진 없을 때 자리표시 개수(한 화면에 맞게 한 줄)
+    var PLACEHOLDER_COUNT = 4; // 사진 없을 때만 사용(현재 미사용)
     var gallery=document.getElementById('gallery');
     function phTile(){
       return '<a href="https://www.instagram.com/bellaon.art_archive" target="_blank" rel="noopener"><div class="ph" style="height:100%">'
@@ -639,15 +651,15 @@ footer small{color:var(--stone);font-size:.74rem}
         +'<g fill="var(--pink-deep)" opacity=".6"><circle cx="112" cy="142" r="5"/><circle cx="193" cy="152" r="6"/></g>'
         +'</svg><span class="tag">BELLAON</span></div></a>';
     }
-    function imgTile(src){
-      return '<a href="'+src+'" class="lb-trigger" data-full="'+src+'"><div class="ph" style="height:100%"><img src="'+src+'" alt="벨라온 작품"></div></a>';
+    function imgTile(p){
+      return '<a href="'+p.src+'" class="lb-trigger" data-full="'+p.src+'" data-title="'+p.title+'"><div class="ph" style="height:100%"><img src="'+p.src+'" alt="'+p.title+'"><span class="cap">'+p.title+'</span></div></a>';
     }
     var html = portfolio.length ? portfolio.map(imgTile).join('') : Array(PLACEHOLDER_COUNT).fill(0).map(phTile).join('');
     gallery.innerHTML = html;
     gallery.querySelectorAll('a').forEach(function(el,i){ el.classList.add('reveal'); el.style.transitionDelay=(Math.min(i,6)*0.07)+'s'; reveal(el); });
     // 이미지 클릭 → 라이트박스 팝업(사이트 이탈 없이 크게 보기)
     gallery.querySelectorAll('a.lb-trigger').forEach(function(a){
-      a.addEventListener('click', function(e){ e.preventDefault(); openLightbox(a.getAttribute('data-full'), '벨라온 작품'); });
+      a.addEventListener('click', function(e){ e.preventDefault(); openLightbox(a.getAttribute('data-full'), a.getAttribute('data-title')||'벨라온 작품'); });
     });
   } catch(e){ console.warn('portfolio init failed', e); }
 
