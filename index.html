@@ -131,7 +131,7 @@ a{color:inherit;text-decoration:none}
 }
 .display{font-family:var(--serif);font-weight:400;line-height:1.02;letter-spacing:-.01em}
 h2.section-title{
-  font-family:var(--serif);font-weight:400;
+  font-family:var(--serif);font-weight:500;
   font-size:clamp(1.2rem,2vw,1.55rem);line-height:1.35;letter-spacing:0;color:var(--ink);  /* About 헤드카피(작은 크기)로 통일 */
 }
 .lead{font-size:clamp(1rem,1.4vw,1.12rem);color:var(--muted);max-width:56ch}
@@ -194,7 +194,7 @@ header.scrolled{border-color:var(--line)}
 .sec-inner{padding-top:var(--sec-y);padding-bottom:var(--sec-y);width:100%}  /* 세로 패딩만 — .wrap의 좌우 여백(gutter) 유지 */
 .sec-head{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;margin-bottom:clamp(36px,5vw,60px)}
 .sec-sub{font-size:.92rem;color:var(--muted);letter-spacing:.02em;margin-top:-6px}
-.rule{width:34px;height:1px;background:var(--pink-deep)}
+.rule{width:44px;height:2px;background:var(--pink-deep)}
 
 /* ---------- 어바웃 ---------- */
 .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,64px);align-items:center}
@@ -620,7 +620,8 @@ footer small{color:var(--stone);font-size:.74rem}
         +'</svg><span class="tag">BELLAON</span></div></a>';
     }
     function imgTile(src){
-      return '<a href="'+src+'" class="lb-trigger" data-full="'+src+'"><div class="ph" style="height:100%"><img src="'+src+'" alt="벨라온 작품"></div></a>';
+      var u=src+'?v=2';  // 캐시 버스터: 파일명이 같아도 새 이미지가 반영되도록
+      return '<a href="'+u+'" class="lb-trigger" data-full="'+u+'"><div class="ph" style="height:100%"><img src="'+u+'" alt="벨라온 작품"></div></a>';
     }
     var html = portfolio.length ? portfolio.map(imgTile).join('') : Array(PLACEHOLDER_COUNT).fill(0).map(phTile).join('');
     gallery.innerHTML = html;
