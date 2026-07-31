@@ -193,6 +193,7 @@ header.scrolled{border-color:var(--line)}
 /* ---------- 일반 섹션 ---------- */
 .sec-inner{padding-top:var(--sec-y);padding-bottom:var(--sec-y);width:100%}  /* 세로 패딩만 — .wrap의 좌우 여백(gutter) 유지 */
 .sec-head{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;margin-bottom:clamp(36px,5vw,60px)}
+.sec-sub{font-size:.92rem;color:var(--muted);letter-spacing:.02em;margin-top:-6px}
 .rule{width:34px;height:1px;background:var(--pink-deep)}
 
 /* ---------- 어바웃 ---------- */
@@ -213,12 +214,13 @@ header.scrolled{border-color:var(--line)}
 
 /* ---------- 프로세스 ---------- */
 .process{position:relative}
-.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(20px,2.5vw,32px);counter-reset:step}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(20px,2.5vw,32px)}
 .step{position:relative;padding-top:34px}
-.step::before{content:counter(step,decimal-leading-zero);counter-increment:step;font-family:var(--caps);font-size:1.5rem;color:var(--pink-deep);display:block;margin-bottom:6px}
 .step .line{position:absolute;top:16px;left:0;right:0;height:1px;background:var(--line)}
 .step .line::after{content:"";position:absolute;left:0;top:-2px;width:5px;height:5px;border-radius:50%;background:var(--sage-deep)}
-.step h4{font-family:var(--serif);font-size:1.3rem;font-weight:500;margin-bottom:6px;color:var(--ink)}
+.p-ic{width:38px;height:38px;color:var(--sage-deep);margin-bottom:14px}
+.p-ic svg{width:100%;height:100%;display:block}
+.step h4{font-family:var(--serif);font-size:1.15rem;font-weight:500;margin-bottom:6px;color:var(--ink);letter-spacing:.02em}
 .step p{font-size:.88rem;color:var(--muted)}
 
 /* ---------- 포트폴리오 ---------- */
@@ -313,14 +315,13 @@ footer small{color:var(--stone);font-size:.74rem}
   .about-visual{order:-1;max-width:460px;margin:0 auto}
   .contact-grid{grid-template-columns:1fr}
   .field-row{grid-template-columns:1fr}
-  /* item 6 · 프로세스: 가로 → 세로 타임라인 (번호가 라인과 겹치지 않도록 재정렬) */
+  /* 프로세스: 가로 → 세로 타임라인 (도트 노드 + 아이콘) */
   .steps{grid-template-columns:1fr;gap:0}
-  .step{padding:0 0 36px 46px}
+  .step{padding:2px 0 30px 46px}
   .step:last-child{padding-bottom:0}
-  .step .line{top:8px;bottom:0;left:12px;right:auto;width:1px;height:auto}
-  .step .line::after{display:none}                 /* 별도 점 숨김 — 번호가 노드 역할 */
-  .step::before{position:absolute;left:12px;top:0;transform:translateX(-50%);margin:0;
-    font-size:1rem;line-height:1;background:var(--canvas);padding:5px 0;width:30px;text-align:center;color:var(--pink-deep)}
+  .step .line{top:6px;bottom:0;left:12px;right:auto;width:1px;height:auto}
+  .step .line::after{display:block;left:12px;top:6px;transform:translate(-50%,0)}
+  .p-ic{width:28px;height:28px;margin-bottom:8px}
 }
 @media(max-width:640px){
   /* 헤더 backdrop-filter가 fixed 메뉴를 헤더(92px) 안에 가두므로 모바일에선 해제 */
@@ -374,9 +375,9 @@ footer small{color:var(--stone);font-size:.74rem}
   <div class="wrap">
     <div class="reveal hero-text">
       <div class="hero-lead">
-        <span class="eyebrow">Art Flower Studio</span>
+        <span class="eyebrow">Floral Art &amp; Design Studio</span>
         <h1 class="display">Designing Moments<br>Through <span class="it">Floral</span> Art</h1>
-        <p class="krt">손끝에서 피어나는 아트플라워,<br>공간과 순간을 아름답게 물들입니다.</p>
+        <p class="krt">공간의 아름다움을 넘어,<br>삶에 머무는 가치를 디자인합니다.</p>
       </div>
       <div class="cta-row">
         <!-- 작품 보기 → 사이트 내 포트폴리오 섹션으로 부드럽게 스크롤(이탈 방지) -->
@@ -392,8 +393,8 @@ footer small{color:var(--stone);font-size:.74rem}
   <div class="wrap sec-inner about-grid">
     <div class="about-copy reveal">
       <span class="eyebrow">About Us</span>
-      <p style="margin-top:18px">한 송이의 꽃이 공간의 분위기를 바꾸고,<br>정성스러운 손길이 특별한 순간을 만듭니다.</p>
-      <p class="sub">벨라온(BELLAON)은 페이퍼플라워와 아트플라워로 공간과 순간을 디자인하는 플로럴 아트 스튜디오입니다. 자이언트 플라워 설치부터 부케 공예(압화·레진)까지, 아트플라워 크리에이터 이보영이 하나하나 손으로 완성합니다.</p>
+      <p style="margin-top:18px">플로럴 아트로 공간을 디자인하고<br>가치를 완성합니다.</p>
+      <p class="sub">공간의 목적과 브랜드가 전하고자 하는 메시지를 이해하고,<br>가장 적합한 디자인과 방법으로 아이디어를 현실의 공간에 구현합니다.<br><br>우리가 쌓아온 경험과 기술이 또 다른 가능성으로 이어질 수 있도록 교육합니다.<br>단순히 만드는 방법을 가르치는 것을 넘어, 디자인 감각과 플로럴 아트에 대한 전문성을 키우고 이를 자신만의 일과 새로운 가능성으로 발전시킬 수 있도록 함께합니다.</p>
       <!-- item 4: 더 알아보기 → 별도 About 페이지 -->
       <a href="about.html" class="btn btn-ghost" style="margin-top:30px">더 알아보기 <span>&rarr;</span></a>
     </div>
@@ -410,34 +411,17 @@ footer small{color:var(--stone);font-size:.74rem}
 <section id="services" style="background:var(--paper)">
   <div class="wrap sec-inner">
     <div class="sec-head reveal">
-      <span class="eyebrow">Our Work</span>
-      <h2 class="section-title">벨라온의 아트플라워</h2>
+      <h2 class="section-title">OUR WORK</h2>
       <span class="rule"></span>
     </div>
-    <div class="grid-auto services">
+    <div class="grid-auto services" style="max-width:720px;margin-inline:auto">
       <div class="svc reveal">
         <div class="ic"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="22" cy="14" r="6"/><circle cx="14" cy="24" r="6"/><circle cx="30" cy="24" r="6"/><circle cx="22" cy="22" r="4" fill="currentColor" stroke="none"/><path d="M22 28v10"/></svg></div>
-        <h3>Paper Flower</h3>
-        <div class="kr-t">페이퍼플라워</div>
-        <p>감성적인 종이꽃 제작</p>
-      </div>
-      <div class="svc reveal">
-        <div class="ic"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M22 38V14"/><path d="M22 20c-6-2-9-7-8-13 6 0 10 4 8 13z"/><path d="M22 24c6-3 9-8 8-14-6 0-10 5-8 14z"/></svg></div>
-        <h3>Giant Flower</h3>
-        <div class="kr-t">자이언트플라워</div>
-        <p>아트플라워 기획 &amp; 공간 설치</p>
-      </div>
-      <div class="svc reveal">
-        <div class="ic"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M17 20c0-3 2-6 5-6s5 3 5 6"/><path d="M15 20h14l-2 16H17z"/><path d="M22 14V9"/></svg></div>
-        <h3>Bouquet Craft</h3>
-        <div class="kr-t">부케공예</div>
-        <p>압화 &amp; 레진 공예</p>
+        <h3>FLORAL ART &amp; SPACE DESIGN</h3>
       </div>
       <div class="svc reveal">
         <div class="ic"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M22 14c-3-2-7-2-10-1v18c3-1 7-1 10 1"/><path d="M22 14c3-2 7-2 10-1v18c-3-1-7-1-10 1"/><path d="M22 14v20"/></svg></div>
-        <h3>Class</h3>
-        <div class="kr-t">클래스</div>
-        <p>원데이 · 취미 · 자격증 · 출강</p>
+        <h3>MFAI &middot; EDUCATION</h3>
       </div>
     </div>
   </div>
@@ -446,15 +430,23 @@ footer small{color:var(--stone);font-size:.74rem}
 <!-- ===== 04 PROCESS ===== -->
 <section id="process">
   <div class="wrap sec-inner process">
-    <div class="sec-head reveal" style="align-items:flex-start;text-align:left">
-      <span class="eyebrow">Design Process</span>
-      <h2 class="section-title">상담부터 설치까지, 정성스러운 과정</h2>
+    <div class="sec-head reveal">
+      <h2 class="section-title">OUR DESIGN PROCESS</h2>
+      <span class="rule"></span>
     </div>
     <div class="steps reveal">
-      <div class="step"><span class="line"></span><h4>Consult</h4><p>공간과 원하는 무드를 상담합니다.</p></div>
-      <div class="step"><span class="line"></span><h4>Design</h4><p>어울리는 컬러와 디자인을 제안합니다.</p></div>
-      <div class="step"><span class="line"></span><h4>Craft</h4><p>한 송이씩 손으로 제작합니다.</p></div>
-      <div class="step"><span class="line"></span><h4>Install</h4><p>현장 설치 · 전달로 완성합니다.</p></div>
+      <div class="step"><span class="line"></span>
+        <div class="p-ic"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="19" cy="19" r="10"/><path d="M27 27l7 7"/></svg></div>
+        <h4>UNDERSTAND</h4><p>공간의 목적과 분위기 분석</p></div>
+      <div class="step"><span class="line"></span>
+        <div class="p-ic"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M22 7a11 11 0 00-7 19.5V31h14v-4.5A11 11 0 0022 7z"/><path d="M17 35h10M19 39h6"/></svg></div>
+        <h4>CONCEPT</h4><p>공간 디자인 및 주제와 컨셉 선정</p></div>
+      <div class="step"><span class="line"></span>
+        <div class="p-ic"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="22" cy="16" r="6"/><path d="M22 22v15"/><path d="M22 30c-6 0-9-4-9-4M22 30c6 0 9-4 9-4"/></svg></div>
+        <h4>DESIGN</h4><p>플로럴 아트 디자인 및 제작</p></div>
+      <div class="step"><span class="line"></span>
+        <div class="p-ic"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M22 37s11-9 11-17a11 11 0 10-22 0c0 8 11 17 11 17z"/><circle cx="22" cy="20" r="4"/></svg></div>
+        <h4>INSTALLATION</h4><p>플로럴 아트 설치 및 공간연출</p></div>
     </div>
   </div>
 </section>
@@ -463,8 +455,7 @@ footer small{color:var(--stone);font-size:.74rem}
 <section id="portfolio" style="background:var(--paper)">
   <div class="wrap sec-inner">
     <div class="sec-head reveal">
-      <span class="eyebrow">Portfolio</span>
-      <h2 class="section-title">포트폴리오</h2>
+      <h2 class="section-title">PROJECTS</h2>
       <span class="rule"></span>
     </div>
     <div class="gallery reveal" id="gallery"></div>
@@ -474,37 +465,18 @@ footer small{color:var(--stone);font-size:.74rem}
   </div>
 </section>
 
-<!-- ===== 06 MATERIALS ===== -->
-<section id="material">
-  <div class="wrap sec-inner">
-    <div class="sec-head reveal">
-      <span class="eyebrow">Materials</span>
-      <h2 class="section-title">다양한 소재, 벨라온의 감성</h2>
-      <span class="rule"></span>
-    </div>
-    <div class="grid-auto materials">
-      <div class="mat reveal"><div class="ph"><img src="images/meterials/paper.png" alt="페이퍼플라워"></div><p>Paper</p><span>페이퍼플라워</span></div>
-      <div class="mat reveal"><div class="ph"><img src="images/meterials/silk.png" alt="실크플라워"></div><p>Silk</p><span>실크플라워</span></div>
-      <div class="mat reveal"><div class="ph"><img src="images/meterials/pressed.png" alt="압화"></div><p>Pressed</p><span>압화</span></div>
-      <div class="mat reveal"><div class="ph"><img src="images/meterials/resin.png" alt="레진"></div><p>Resin</p><span>레진</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 07 CLASS (item 11·12: 명칭 변경 + 첨부 이미지 기준 카드) ===== -->
+<!-- ===== 07 CLASS (MFAI 교육협회) ===== -->
 <section id="education" style="background:var(--paper)">
   <div class="wrap sec-inner">
     <div class="sec-head reveal">
-      <span class="eyebrow">Class</span>
-      <h2 class="section-title">플라워 아트 클래스</h2>
+      <h2 class="section-title">Mindful Floral Art Institute (MFAI)</h2>
+      <p class="sec-sub">마인드풀 플로럴 아트 교육협회</p>
       <span class="rule"></span>
     </div>
-    <div class="grid-auto edu">
-      <div class="card reveal"><div class="ph"><img src="images/class/MASTER.png" alt="마스터 클래스"></div><h4>Master Class</h4><p>창업 및 마스터 과정</p></div>
-      <div class="card reveal"><div class="ph"><img src="images/class/Basic.png" alt="기초 클래스"></div><h4>Basic Class</h4><p>기초 클래스</p></div>
-      <div class="card reveal"><div class="ph"><img src="images/class/coloring.png" alt="시그니처 컬러링 워크숍"></div><h4>Signature Coloring</h4><p>시그니처 컬러링 워크숍</p></div>
-      <div class="card reveal"><div class="ph"><img src="images/class/kinetic.png" alt="키네틱 플라워 클래스"></div><h4>Kinetic Flower</h4><p>키네틱 플라워 클래스</p></div>
-      <div class="card reveal"><div class="ph"><img src="images/class/workshop.png" alt="원데이 클래스 및 출강"></div><h4>Workshop</h4><p>원데이 클래스 및 출강</p></div>
+    <div class="grid-auto edu" style="max-width:860px;margin-inline:auto">
+      <div class="card reveal"><div class="ph"><img src="images/class/MASTER.png" alt="Floral Art & Design"></div><h4>Floral Art &amp; Design</h4></div>
+      <div class="card reveal"><div class="ph"><img src="images/class/paper-flower.jpg" alt="Paper Flower"></div><h4>Paper Flower</h4></div>
+      <div class="card reveal"><div class="ph"><img src="images/class/coloring.png" alt="Signature Coloring"></div><h4>Signature Coloring</h4></div>
     </div>
   </div>
 </section>
@@ -515,12 +487,12 @@ footer small{color:var(--stone);font-size:.74rem}
     <div class="contact-grid">
       <div class="reveal">
         <span class="eyebrow">Contact</span>
-        <h2 style="margin-top:16px">공간을 물들이는 아트플라워,<br>벨라온과 함께하세요.</h2>
+        <h2 style="margin-top:16px">공간의 아름다움을 넘어,<br>삶에 머무는 가치를 디자인합니다.</h2>
         <ul class="contact-list">
           <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 5h12a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z"/><path d="M4 6l6 5 6-5"/></svg></span><a href="tel:01073025170">010-7302-5170</a></li>
           <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="4" width="14" height="12" rx="2"/><path d="M3 6l7 5 7-5"/></svg></span><a href="mailto:bellaon_art@naver.com">bellaon_art@naver.com</a></li>
           <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="14" height="14" rx="4"/><circle cx="10" cy="10" r="3.5"/><circle cx="14.5" cy="5.5" r="1" fill="currentColor" stroke="none"/></svg></span><a href="https://www.instagram.com/bellaon_art" target="_blank" rel="noopener">@bellaon_art</a></li>
-          <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M10 18s6-5.3 6-10a6 6 0 10-12 0c0 4.7 6 10 6 10z"/><circle cx="10" cy="8" r="2.2"/></svg></span><span>전남 광양시 눈소9길 53-1 2호</span></li>
+          <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M10 18s6-5.3 6-10a6 6 0 10-12 0c0 4.7 6 10 6 10z"/><circle cx="10" cy="8" r="2.2"/></svg></span><span>광양시 눈소9길 53-1 2호</span></li>
         </ul>
       </div>
 
@@ -556,8 +528,8 @@ footer small{color:var(--stone);font-size:.74rem}
     </div>
 
     <footer>
-      <span class="logo">BELLAON</span>
-      <small>&copy; 2026 BELLAON Art Flower Studio. 이보영. All rights reserved.</small>
+      <span class="logo">BELLAON ART</span>
+      <small>&copy; BELLAON ART. All rights reserved.</small>
     </footer>
   </div>
 </section>
@@ -632,14 +604,10 @@ footer small{color:var(--stone);font-size:.74rem}
      자리표시 대신 그 사진이 순서대로 채워집니다. (권장 3:4 세로, 900x1200) ---- */
   try {
     var portfolio = [
-      {src:'images/portfolio/work-01.png', title:'Pink cafe'},
-      {src:'images/portfolio/work-02.png', title:'호텔행사'},
-      {src:'images/portfolio/work-03.png', title:'국립호남권생물자원관'},
-      {src:'images/portfolio/work-04.png', title:'졸업식 포토존'},
-      {src:'images/portfolio/work-05.png', title:'시장 에바폼 백드롭 작업'},
-      {src:'images/portfolio/work-06.png', title:'무드 로즈 조명'},
-      {src:'images/portfolio/work-07.png', title:'핑크 부케'},
-      {src:'images/portfolio/work-08.png', title:'페스티벌 무대 장식'}
+      'images/portfolio/work-01.png','images/portfolio/work-02.png',
+      'images/portfolio/work-03.png','images/portfolio/work-04.png',
+      'images/portfolio/work-05.png','images/portfolio/work-06.png',
+      'images/portfolio/work-07.png','images/portfolio/work-08.png'
     ];
     var PLACEHOLDER_COUNT = 4; // 사진 없을 때만 사용(현재 미사용)
     var gallery=document.getElementById('gallery');
@@ -651,8 +619,8 @@ footer small{color:var(--stone);font-size:.74rem}
         +'<g fill="var(--pink-deep)" opacity=".6"><circle cx="112" cy="142" r="5"/><circle cx="193" cy="152" r="6"/></g>'
         +'</svg><span class="tag">BELLAON</span></div></a>';
     }
-    function imgTile(p){
-      return '<a href="'+p.src+'" class="lb-trigger" data-full="'+p.src+'" data-title="'+p.title+'"><div class="ph" style="height:100%"><img src="'+p.src+'" alt="'+p.title+'"><span class="cap">'+p.title+'</span></div></a>';
+    function imgTile(src){
+      return '<a href="'+src+'" class="lb-trigger" data-full="'+src+'"><div class="ph" style="height:100%"><img src="'+src+'" alt="벨라온 작품"></div></a>';
     }
     var html = portfolio.length ? portfolio.map(imgTile).join('') : Array(PLACEHOLDER_COUNT).fill(0).map(phTile).join('');
     gallery.innerHTML = html;
