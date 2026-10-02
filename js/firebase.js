@@ -10,10 +10,14 @@ import {
   onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword,
   sendEmailVerification, sendPasswordResetEmail, updateProfile,
   EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, updatePassword, deleteUser,
+  applyActionCode, checkActionCode, verifyPasswordResetCode, confirmPasswordReset,
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 import {
   getFirestore, connectFirestoreEmulator,
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+import {
+  getFunctions, connectFunctionsEmulator, httpsCallable,
+} from "https://www.gstatic.com/firebasejs/12.15.0/firebase-functions.js";
 
 // 페이지들은 Firestore 함수를 이 파일에서 가져다 쓴다(버전 주소를 한 곳에만 두기 위해)
 export {
@@ -25,6 +29,7 @@ export {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification,
   sendPasswordResetEmail, updateProfile,
   EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, updatePassword, deleteUser,
+  applyActionCode, checkActionCode, verifyPasswordResetCode, confirmPasswordReset,
 };
 
 // 실제 Firebase 프로젝트 bellaon-class (써니님 계정, 웹 앱 bellaon-web) — 2026-10-03 콘솔 원본과 대조 완료
@@ -47,8 +52,12 @@ const app = initializeApp(IS_EMU
 export const auth = getAuth(app);
 auth.languageCode = "ko";   // 인증·비밀번호 재설정 메일을 한국어로
 export const db = getFirestore(app);
+// 서버 함수(수강 코드 확인) — 서울 지역(firebase/functions/index.js 와 같아야 함)
+const fns = getFunctions(app, "asia-northeast3");
+export const redeemCode = (code) => httpsCallable(fns, "redeemCode")({ code }).then((r) => r.data);
 
 if (IS_EMU) {
   connectAuthEmulator(auth, "http://127.0.0.1:9299", { disableWarnings: true });
   connectFirestoreEmulator(db, "127.0.0.1", 8285);
+  connectFunctionsEmulator(fns, "127.0.0.1", 5099);
 }

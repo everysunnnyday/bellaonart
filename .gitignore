@@ -8,6 +8,7 @@ node_modules/
 firebase/.emu-data/
 firebase/*.log
 firebase/functions/core.js
+firebase/functions/.secret.local
 
 # OS/에디터 임시파일
 .DS_Store

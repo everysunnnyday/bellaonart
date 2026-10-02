@@ -44,8 +44,12 @@ beforeEach(async () => {
     await put("config/policy", { ...DEFAULT_POLICY });
     await put("courses/pub", { title: "공개", published: true });
     await put("courses/hid", { title: "비공개", published: false });
-    await put("courses/pub/lessons/l1", { title: "1강", youtubeId: "o-Jmog-ltFY", durationSec: 100, order: 1 });
-    await put("courses/hid/lessons/l1", { title: "1강", youtubeId: "6cid1r_gQ3E", durationSec: 100, order: 1 });
+    await put("courses/pub/lessons/l1", { title: "1강", durationSec: 100, order: 1 });
+    await put("courses/hid/lessons/l1", { title: "1강", durationSec: 100, order: 1 });
+    await put("courses/pub/videos/l1", { youtubeId: "o-Jmog-ltFY" });
+    await put("courses/hid/videos/l1", { youtubeId: "6cid1r_gQ3E" });
+    await put("codes/comos2026", { courseId: "pub", maxUses: null, expiresAt: null, active: true, memo: "", usedCount: 3, createdBy: "adm" });
+    await put("codes/comos2026/uses/stu", { uid: "stu" });
     await put("enrollments/stu_pub", enr("stu", "pub"));
     await put("enrollments/stu_hid", enr("stu", "hid"));
     await put("enrollments/unv_pub", enr("unv", "pub"));
@@ -114,18 +118,67 @@ test("강좌: 공개는 누구나 · 비공개는 관리자와 수강권 있던 
   await assertFails(deleteDoc(doc(admin(), "courses/pub")));
 });
 
-// ---------- 차시(유튜브 ID) ----------
-test("차시: 유효 수강권 + 인증된 회원만 · 비로그인/미수강/만료/회수/시작 전/미인증 차단", async () => {
-  await assertSucceeds(getDocs(collection(stu(), "courses/pub/lessons")));
-  await assertSucceeds(getDocs(collection(admin(), "courses/pub/lessons")));
-  await assertFails(getDocs(collection(anon(), "courses/pub/lessons")));
-  await assertFails(getDocs(collection(other(), "courses/pub/lessons")));
-  await assertFails(getDocs(collection(as("exp", "exp@x.com"), "courses/pub/lessons")));
-  await assertFails(getDocs(collection(as("rev", "rev@x.com"), "courses/pub/lessons")));
-  await assertFails(getDocs(collection(as("fut", "fut@x.com"), "courses/pub/lessons")));
-  await assertFails(getDocs(collection(unv(), "courses/pub/lessons")));
-  await assertFails(getDoc(doc(other(), "courses/pub/lessons/l1")));
-  await assertFails(setDoc(doc(stu(), "courses/pub/lessons/l2"), { title: "x" }));
+// ---------- 차시 목차(공개) ----------
+test("차시 목차: 공개 강좌는 비로그인도 읽기 · 비공개 강좌는 관리자·수강권 있던 회원만 · 쓰기는 관리자만", async () => {
+  await assertSucceeds(getDocs(collection(anon(), "courses/pub/lessons")));
+  await assertSucceeds(getDocs(collection(other(), "courses/pub/lessons")));
+  await assertFails(getDocs(collection(anon(), "courses/hid/lessons")));
+  await assertFails(getDocs(collection(other(), "courses/hid/lessons")));
+  await assertSucceeds(getDocs(collection(stu(), "courses/hid/lessons")));
+  await assertSucceeds(getDocs(collection(admin(), "courses/hid/lessons")));
+  await assertFails(setDoc(doc(stu(), "courses/pub/lessons/l2"), { title: "x", durationSec: 1, order: 2 }));
+  await assertSucceeds(setDoc(doc(admin(), "courses/pub/lessons/l2"), { title: "x", durationSec: 1, order: 2 }));
+});
+test("차시 목차에는 영상 주소를 넣을 수 없음(관리자도)", async () => {
+  await assertFails(setDoc(doc(admin(), "courses/pub/lessons/l3"), { title: "x", durationSec: 1, order: 3, youtubeId: "abc" }));
+  await assertFails(updateDoc(doc(admin(), "courses/pub/lessons/l1"), { youtubeId: "abc" }));
+});
+
+// ---------- 차시 영상 주소(유튜브 ID) ----------
+test("영상 주소: 유효 수강권 + 인증된 회원만 · 비로그인/미수강/만료/회수/시작 전/미인증 차단", async () => {
+  await assertSucceeds(getDocs(collection(stu(), "courses/pub/videos")));
+  await assertSucceeds(getDocs(collection(admin(), "courses/pub/videos")));
+  await assertFails(getDocs(collection(anon(), "courses/pub/videos")));
+  await assertFails(getDocs(collection(other(), "courses/pub/videos")));
+  await assertFails(getDocs(collection(as("exp", "exp@x.com"), "courses/pub/videos")));
+  await assertFails(getDocs(collection(as("rev", "rev@x.com"), "courses/pub/videos")));
+  await assertFails(getDocs(collection(as("fut", "fut@x.com"), "courses/pub/videos")));
+  await assertFails(getDocs(collection(unv(), "courses/pub/videos")));
+  await assertFails(getDoc(doc(other(), "courses/pub/videos/l1")));
+  await assertFails(setDoc(doc(stu(), "courses/pub/videos/l2"), { youtubeId: "x" }));
+  await assertSucceeds(setDoc(doc(admin(), "courses/pub/videos/l2"), { youtubeId: "x" }));
+  await assertFails(setDoc(doc(admin(), "courses/pub/videos/l3"), { youtubeId: "x", title: "y" }));
+});
+
+// ---------- 수강 코드 ----------
+const newCode = (o = {}) => ({ courseId: "pub", maxUses: 10, expiresAt: null, active: true, memo: "", usedCount: 0, createdBy: "adm", createdAt: serverTimestamp(), ...o });
+test("수강 코드: 관리자만 보기·만들기 · 회원·비로그인은 코드도 사용 기록도 못 봄", async () => {
+  await assertSucceeds(getDoc(doc(admin(), "codes/comos2026")));
+  await assertSucceeds(getDocs(collection(admin(), "codes")));
+  await assertSucceeds(getDocs(collection(admin(), "codes/comos2026/uses")));
+  await assertFails(getDoc(doc(stu(), "codes/comos2026")));
+  await assertFails(getDoc(doc(anon(), "codes/comos2026")));
+  await assertFails(getDocs(collection(stu(), "codes")));
+  await assertFails(getDoc(doc(stu(), "codes/comos2026/uses/stu")));
+  await assertSucceeds(setDoc(doc(admin(), "codes/new-code"), newCode()));
+  await assertFails(setDoc(doc(stu(), "codes/my-code"), newCode()));
+  await assertFails(setDoc(doc(admin(), "codes/BAD"), newCode()));                  // 대문자 금지(소문자로 저장)
+  await assertFails(setDoc(doc(admin(), "codes/abc"), newCode()));                  // 4자 미만
+  await assertFails(setDoc(doc(admin(), "codes/pre-used"), newCode({ usedCount: 5 })));
+  await assertFails(setDoc(doc(admin(), "codes/extra"), newCode({ discount: 1 })));
+});
+test("수강 코드: 관리자는 중지·메모·인원·마감만 수정 · 사용 횟수·강좌는 못 바꿈 · 삭제 불가 · 사용 기록은 서버만", async () => {
+  await assertSucceeds(updateDoc(doc(admin(), "codes/comos2026"), { active: false, memo: "마감" }));
+  await assertSucceeds(updateDoc(doc(admin(), "codes/comos2026"), { maxUses: 20 }));
+  await assertFails(updateDoc(doc(admin(), "codes/comos2026"), { usedCount: 0 }));
+  await assertFails(updateDoc(doc(admin(), "codes/comos2026"), { courseId: "hid" }));
+  await assertFails(updateDoc(doc(stu(), "codes/comos2026"), { active: true }));
+  await assertFails(deleteDoc(doc(admin(), "codes/comos2026")));
+  await assertFails(setDoc(doc(admin(), "codes/comos2026/uses/oth"), { uid: "oth" }));
+  await assertFails(setDoc(doc(stu(), "codeFails/stu"), { count: 0 }));            // 실패 횟수 초기화 시도
+});
+test("수강권은 여전히 회원이 직접 못 만든다(코드 확인은 서버 함수만)", async () => {
+  await assertFails(setDoc(doc(other(), "enrollments/oth_pub"), enr("oth", "pub", { source: "code", code: "comos2026" })));
 });
 
 // ---------- 수강권 ----------

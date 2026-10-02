@@ -182,21 +182,35 @@ export function watchUser(cb) {
     renderAuthArea();
     authSubs.forEach((fn) => fn(authState));
   });
+  // 이메일 인증 전 회원이 다른 탭(메일)에서 인증하고 이 탭으로 돌아오면 → 인증 상태를 다시 읽고 새로고침
+  document.addEventListener("visibilitychange", async () => {
+    const u = auth.currentUser;
+    if (document.visibilityState !== "visible" || !u || u.emailVerified) return;
+    try {
+      await u.reload();
+      if (auth.currentUser?.emailVerified) { await auth.currentUser.getIdToken(true); location.reload(); }
+    } catch { /* 네트워크 오류 등은 무시 — [인증을 마쳤어요] 버튼으로도 확인 가능 */ }
+  });
 }
 
+// 상단 로그인 영역 — 메뉴 이름은 한/영 모두 영문(2026-10-03 써니님), 로그인하면 "이름님"으로 로그인 상태 표시
+// (마이페이지에서 이름을 바꾸면 refreshAuthArea() 로 바로 다시 그린다)
+export function refreshAuthArea() { renderAuthArea(); }
 function renderAuthArea() {
   const area = $(".hd-auth");
   if (!area) return;
   const { user, isAdmin } = authState;
   const act = shellOpts.active;
   if (user) {
-    area.innerHTML = `${isAdmin ? `<a href="/admin/" class="${act === "admin" ? "on" : ""}">${t("관리자", "nav.admin")}</a>` : ""}
-      <a href="/mypage.html" class="${act === "mypage" ? "on" : ""}">${t("마이페이지", "nav.mypage")}</a>
-      <button type="button" data-act="logout">${t("로그아웃", "nav.logout")}</button>`;
+    const name = auth.currentUser?.displayName || (user.email || "").split("@")[0];
+    area.innerHTML = `<span class="hd-name" title="${esc(name)}">${tv("{name}님", "nav.hello", { name: esc(name) })}</span>
+      ${isAdmin ? `<a href="/admin/" class="${act === "admin" ? "on" : ""}">Admin</a>` : ""}
+      <a href="/mypage.html" class="${act === "mypage" ? "on" : ""}">My Page</a>
+      <button type="button" data-act="logout">Log out</button>`;
     area.querySelector("[data-act=logout]").onclick = logout;
   } else {
-    area.innerHTML = `<button type="button" data-act="in">${t("로그인", "nav.login")}</button>
-      <button type="button" data-act="up">${t("회원가입", "nav.signup")}</button>`;
+    area.innerHTML = `<button type="button" data-act="in">Log in</button>
+      <button type="button" data-act="up">Sign up</button>`;
     area.querySelector("[data-act=in]").onclick = () => login("in");
     area.querySelector("[data-act=up]").onclick = () => login("up");
   }

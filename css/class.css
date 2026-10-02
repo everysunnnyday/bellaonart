@@ -15,7 +15,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 .eyebrow{font-family:var(--caps);font-size:.76rem;letter-spacing:.12em;color:var(--sage-deep);font-weight:500}   /* 단어 첫 글자만 대문자 (site.css 와 같은 규칙) */
 .page-head h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.6rem,3.4vw,2.3rem);line-height:1.3;margin-top:10px;letter-spacing:-.01em}
 .page-head p{color:var(--muted);margin-top:8px;font-size:.92rem}
-.rule{display:block;width:36px;height:2px;background:var(--pink-deep);margin-top:18px}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:.84rem;letter-spacing:.03em;padding:11px 22px;border-radius:999px;border:1px solid var(--line);background:transparent;transition:.2s;white-space:nowrap}
 .btn:hover{border-color:var(--pink-deep);color:var(--pink-deep)}
@@ -94,13 +93,44 @@ button{font:inherit;color:inherit;cursor:pointer}
   .lessons{max-height:none}
 }
 
-/* 수강권 없음·로그인 필요 안내 */
+/* 강좌를 못 열 때(주소 오류·없는 강좌 등) 안내 */
 .gate{max-width:640px;margin:0 auto;text-align:center}
-.gate .thumb{aspect-ratio:16/9;border-radius:10px;background:var(--line) center/cover no-repeat;margin-bottom:22px}
-.gate h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.5rem,3vw,2rem)}
-.gate .desc{color:var(--ink-soft);margin-top:12px;white-space:pre-line;font-size:.92rem}
 .gate .state{margin-top:22px;color:var(--muted);font-size:.88rem}
 .gate .btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+
+/* ---------- 강좌 상세 (누구나 · 수강권 없을 때) ---------- */
+.detail{max-width:1040px;margin:0 auto}
+.d-top{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(24px,4vw,52px);align-items:start}
+.d-thumb{aspect-ratio:4/3;border-radius:12px;background:var(--line) center/cover no-repeat}
+.d-info h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.6rem,3.2vw,2.3rem);line-height:1.25;margin-top:8px}
+.d-sum{color:var(--ink-soft);margin-top:10px;font-size:.95rem}
+.d-facts{margin-top:22px;border-top:1px solid var(--line)}
+.d-facts div{display:grid;grid-template-columns:84px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.d-facts dt{color:var(--muted)}
+.d-facts dd{color:var(--ink)}
+.d-act{margin-top:22px}
+.d-act .d-msg{color:var(--ink-soft);font-size:.9rem}
+.d-act .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.d-act .empty{padding:18px 0;text-align:left}   /* 이메일 인증 안내를 상세 안에 넣을 때 */
+.code-form{margin-top:22px;padding-top:18px;border-top:1px dashed var(--line)}
+.code-form label{display:block;font-size:.86rem;color:var(--ink-soft);margin-bottom:8px}
+.code-row{display:flex;gap:8px}
+.code-row input{flex:1;min-width:0;font:inherit;font-size:.92rem;padding:10px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink)}
+.code-row input:focus{outline:none;border-color:var(--sage-deep)}
+.code-msg{min-height:1.4em;margin-top:8px;font-size:.84rem;color:var(--muted)}
+.code-msg.err{color:var(--pink-deep)}
+.d-sec{margin-top:clamp(36px,5vw,56px)}
+.d-sec h2{font-family:var(--serif);font-weight:500;font-size:1.35rem;margin-bottom:14px}
+.d-desc{white-space:pre-line;color:var(--ink-soft);font-size:.95rem;line-height:1.9}
+.d-outline{list-style:none;border-top:1px solid var(--line)}
+.d-outline li{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:13px 4px;border-bottom:1px solid var(--line)}
+.d-outline .no{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:.74rem;border:1px solid var(--line);color:var(--muted)}
+.d-outline .t{font-size:.94rem}
+.d-outline .dur{font-size:.8rem;color:var(--muted)}
+@media(max-width:760px){
+  .d-top{grid-template-columns:1fr}
+  .d-thumb{aspect-ratio:16/10}
+}
 
 /* ---------- 관리자 ---------- */
 .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto}
@@ -145,6 +175,28 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.84rem}
 
 /* ---------- 마이페이지 · 개인정보 수정 ---------- */
 .profile{max-width:560px}
+
+/* ---------- 계정 확인(/auth/action.html) ---------- */
+.act-box{max-width:440px;margin:0 auto;text-align:center}
+.act-box .btns{display:flex;justify-content:center;gap:10px;margin-top:18px}
+.act-card h4{font-weight:500;font-size:1rem;margin-bottom:4px}
+.act-card .form{margin-top:16px;text-align:left}
+
+/* ---------- 마이페이지: 모든 내용 가운데 정렬 (2026-10-03 써니님) — 입력칸 안 글자만 왼쪽 ---------- */
+.my-page .tabs{justify-content:center}
+.my-page .my-list{max-width:620px;margin:0 auto}
+.my-page .my-item{grid-template-columns:1fr;gap:14px;text-align:center;padding:20px}
+.my-page .my-item .thumb{width:100%;max-width:420px;margin:0 auto}
+.my-page .my-item .line{justify-content:center}
+.my-page .my-item .acts{flex-direction:row;flex-wrap:wrap;justify-content:center}
+.my-page .my-item .acts .btn{flex:0 1 auto}
+.my-page .profile{margin:0 auto;text-align:center}
+.my-page .profile .field{text-align:center}
+.my-page .profile .field input{text-align:left}
+.my-empty{text-align:center;color:var(--muted);padding:clamp(28px,5vw,48px) 16px 0}
+.my-empty .btn{margin-top:18px}
+.my-browse{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:clamp(48px,7vw,80px)}
+.my-browse #wsList{width:100%;margin-top:clamp(18px,3vw,30px)}
 .profile h4{font-weight:500;font-size:.95rem;margin:4px 0 12px}
 .profile .card-box + .card-box{margin-top:18px}
 .profile .danger{border-color:rgba(227,155,163,.6)}

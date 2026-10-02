@@ -1,13 +1,17 @@
-// 강의실 (/class/watch.html?c=코스ID[&l=차시ID]) — 영상 시청 · 실제 시청 구간 기록 · 수강률
+// 강좌 상세 · 강의실 (/class/watch.html?c=코스ID[&l=차시ID])
+// - 누구나: 강좌 상세(소개·가격·목차·수강 기간) — 목차는 공개 칸(lessons)만 읽는다(영상 주소 없음)
+// - 수강권 있는 회원: 강의실(영상 시청 · 실제 시청 구간 기록 · 수강률) — 영상 주소(videos)는 이때만 읽힌다
+// - 수강권 없는 회원: 문의 버튼 + 수강 코드 입력(서버 함수 redeemCode 가 확인 후 수강권 생성)
 import {
-  db, CONFIGURED, doc, getDoc, getDocs, setDoc, collection, query, orderBy, serverTimestamp,
+  db, CONFIGURED, doc, getDoc, getDocs, setDoc, collection, query, orderBy, serverTimestamp, redeemCode,
 } from "./firebase.js";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast,
   notConfiguredHtml, KAKAO_CHANNEL, PHONE, DEFAULT_THUMB, needsVerify, verifyGateHtml, bindVerifyGate,
 } from "./common.js";
-import { enrollState, fmtLeft, lessonStat, courseStat, fmtDur, fmtPct, fmtDate } from "./core.js";
+import { enrollState, fmtLeft, lessonStat, courseStat, fmtDur, fmtPct, fmtDate, courseDays } from "./core.js";
 import { LessonTracker } from "./youtube.js";
+import { t, tv, onLangChange } from "./i18n.js";
 
 initShell({ active: "workshop" });
 const app = $("#app");
@@ -16,21 +20,111 @@ const cid = params.get("c");
 
 let me = null, course = null, enr = null, policy = null, lessons = [], progress = null;
 let tracker = null, curId = null, preview = false;
+let detailState = null;   // 상세 화면이 떠 있을 때의 상태(언어를 바꾸면 다시 그리기 위해)
 
-// ---------- 수강권이 없을 때 등 안내 화면 ----------
-function gate(msg, btns = "") {
-  app.innerHTML = `<div class="gate">
-    ${course ? `<div class="thumb" style="background-image:url('${esc(course.thumb || DEFAULT_THUMB)}')"></div>
-      <span class="eyebrow">Online Class</span><h1>${esc(course.title)}</h1>
-      ${course.description || course.summary ? `<p class="desc">${esc(course.description || course.summary)}</p>` : ""}` : ""}
-    <p class="state">${msg}</p>
-    <div class="btns">${btns}</div></div>`;
+// ---------- 강좌를 못 열 때 ----------
+function notice(msg, btns = "") {
+  detailState = null;
+  app.innerHTML = `<div class="gate"><p class="state">${msg}</p><div class="btns">${btns}</div></div>`;
 }
-const askBtns = `<a class="btn solid" href="${KAKAO_CHANNEL}" target="_blank" rel="noopener">카카오톡으로 수강 문의</a>
-  <a class="btn" href="tel:${PHONE.replace(/-/g, "")}">전화 ${PHONE}</a>`;
+const wsBtn = () => `<a class="btn" href="/workshop.html">Workshop</a>`;
+const askBtns = () => `<a class="btn solid" href="${KAKAO_CHANNEL}" target="_blank" rel="noopener">${t("카카오톡으로 수강 문의", "cd.askKakao")}</a>
+  <a class="btn" href="tel:${PHONE.replace(/-/g, "")}">${tv("전화 {p}", "cd.askPhone", { p: PHONE })}</a>`;
+
+// 수강 코드 결과 안내 (사유 = firebase/functions/redeem.js)
+const REDEEM_MSG = {
+  unauthenticated: ["로그인 후 이용해 주세요.", "cd.r.auth"],
+  unverified: ["이메일 인증을 마친 뒤 이용해 주세요.", "cd.r.unverified"],
+  "too-many": ["코드를 여러 번 잘못 입력했습니다. 1시간 뒤에 다시 시도해 주세요.", "cd.r.many"],
+  invalid: ["코드를 다시 확인해 주세요.", "cd.r.invalid"],
+  stopped: ["사용이 중지된 코드입니다.", "cd.r.stopped"],
+  expired: ["사용 기간이 지난 코드입니다.", "cd.r.expired"],
+  full: ["사용 인원이 마감된 코드입니다.", "cd.r.full"],
+  used: ["이미 사용한 코드입니다.", "cd.r.used"],
+  course: ["지금은 신청할 수 없는 강좌입니다.", "cd.r.course"],
+  enrolled: ["이미 수강 중인 강좌입니다.", "cd.r.enrolled"],
+  revoked: ["수강권이 회수된 강좌입니다. 문의해 주세요.", "cd.r.revoked"],
+  "not-ready": ["아직 수강 신청을 받을 준비가 되지 않았습니다. 문의해 주세요.", "cd.r.notReady"],
+};
+const redeemMsg = (reason) => t(...(REDEEM_MSG[reason] || ["처리하지 못했습니다. 잠시 후 다시 시도해 주세요.", "cd.r.fail"]));
+
+// ---------- 강좌 상세 (수강권이 없을 때 · 비회원 포함) ----------
+// state: login · verify · none · expired · upcoming · revoked
+function renderDetail(state) {
+  detailState = state;
+  const total = lessons.reduce((s, l) => s + (l.durationSec || 0), 0);
+  const days = policy && courseDays(course, policy);
+  const facts = [
+    course.priceLabel ? [t("수강료", "cd.price"), esc(course.priceLabel)] : null,
+    lessons.length ? [t("구성", "cd.parts"), tv("{n}강 · 총 {d}", "cd.partsVal", { n: lessons.length, d: fmtDur(total) })] : null,
+    days ? [t("수강 기간", "cd.period"), tv("{d}일 · 1회 무료 연장 +{e}일", "cd.periodVal", { d: days, e: policy.extendDays })] : null,
+  ].filter(Boolean);
+  const desc = course.description || "";
+
+  app.innerHTML = `<article class="detail">
+    <div class="d-top">
+      <div class="d-thumb" style="background-image:url('${esc(course.thumb || DEFAULT_THUMB)}')"></div>
+      <div class="d-info">
+        <span class="eyebrow">Online Class</span>
+        <h1>${esc(course.title)}</h1>
+        ${course.summary ? `<p class="d-sum">${esc(course.summary)}</p>` : ""}
+        ${facts.length ? `<dl class="d-facts">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>` : ""}
+        <div class="d-act" id="act"></div>
+      </div>
+    </div>
+    ${desc ? `<section class="d-sec"><h2>${t("강좌 소개", "cd.about")}</h2><p class="d-desc">${esc(desc)}</p></section>` : ""}
+    <section class="d-sec"><h2>${t("강의 목차", "cd.outline")}</h2>
+      ${lessons.length ? `<ol class="d-outline">${lessons.map((l, i) => `<li><span class="no">${i + 1}</span>
+        <span class="t">${esc(l.title)}</span><span class="dur">${fmtDur(l.durationSec)}</span></li>`).join("")}</ol>`
+        : `<p class="hint">${t("강의 영상을 준비하고 있습니다.", "cd.noLessons")}</p>`}
+    </section>
+  </article>`;
+
+  const act = $("#act");
+  if (state === "login") {
+    act.innerHTML = `<p class="d-msg">${t("로그인 후 수강 신청과 수강 코드 입력을 할 수 있습니다.", "cd.needLogin")}</p>
+      <div class="btns"><button type="button" class="btn solid" id="loginBtn">${t("로그인 / 회원가입", "cd.login")}</button></div>`;
+    $("#loginBtn").onclick = () => login();
+    return;
+  }
+  if (state === "verify") { act.innerHTML = verifyGateHtml(me.user); bindVerifyGate(act, me.user); return; }
+  const msg = {
+    none: t("입금을 확인하면 수강권을 드립니다. 아래 문의 버튼으로 신청해 주세요.", "cd.none"),
+    expired: tv("수강 기간이 끝났습니다. (종료일 {d})", "cd.expired", { d: fmtDate(enr?.endAt) }),
+    upcoming: tv("수강 시작일은 {d} 입니다.", "cd.upcoming", { d: fmtDate(enr?.startAt) }),
+    revoked: t("수강권이 없습니다. 문의해 주세요.", "cd.revoked"),
+  }[state];
+  const withCode = state === "none" || state === "expired";
+  act.innerHTML = `<p class="d-msg">${msg}</p>
+    ${state === "upcoming" ? "" : `<div class="btns">${askBtns()}</div>`}
+    ${withCode ? `<form class="code-form" id="codeForm" autocomplete="off">
+      <label for="codeIn">${t("수강 코드가 있으신가요?", "cd.codeQ")}</label>
+      <div class="code-row"><input id="codeIn" name="code" maxlength="30" placeholder="${t("수강 코드 입력", "cd.codePh")}">
+        <button type="submit" class="btn sage">${t("등록", "cd.codeBtn")}</button></div>
+      <p class="code-msg" id="codeMsg" role="status"></p></form>` : ""}`;
+  if (withCode) $("#codeForm").onsubmit = onRedeem;
+}
+
+async function onRedeem(e) {
+  e.preventDefault();
+  const f = e.currentTarget, out = $("#codeMsg"), btn = f.querySelector("button");
+  const code = f.code.value.trim();
+  if (!code) { out.textContent = t("코드를 입력해 주세요.", "cd.codeEmpty"); return; }
+  btn.disabled = true; out.className = "code-msg"; out.textContent = t("확인 중…", "cd.codeWait");
+  try {
+    const r = await redeemCode(code);
+    if (!r.ok) { out.className = "code-msg err"; out.textContent = redeemMsg(r.reason); btn.disabled = false; return; }
+    toast(t("수강권이 등록되었습니다. 바로 시작해 보세요!", "cd.codeOk"), 4000);
+    await enter();
+  } catch (err) {
+    console.error(err);
+    out.className = "code-msg err"; out.textContent = redeemMsg("fail"); btn.disabled = false;
+  }
+}
 
 // ---------- 강의실 화면 ----------
 function renderRoom() {
+  detailState = null;
   const now = Date.now();
   app.innerHTML = `
   ${preview ? `<div class="alert">관리자 미리보기입니다 — 수강권이 없어 진도는 저장되지 않습니다.</div>` : ""}
@@ -135,42 +229,41 @@ async function openLesson(lid) {
 
 async function enter() {
   if (tracker) { await tracker.destroy(); tracker = null; }
-  if (!cid) return gate("강좌 주소가 올바르지 않습니다.", `<a class="btn" href="/workshop.html">Workshop</a>`);
+  if (!cid) return notice(t("강좌 주소가 올바르지 않습니다.", "cd.badUrl"), wsBtn());
 
   try { const s = await getDoc(doc(db, "courses", cid)); course = s.exists() ? s.data() : null; }
   catch { course = null; }
-  if (!course) return gate("강좌를 찾을 수 없습니다.", `<a class="btn" href="/workshop.html">Workshop</a>`);
-  document.title = `${course.title} | 벨라온 온라인 클래스`;
+  if (!course) return notice(t("강좌를 찾을 수 없습니다.", "cd.notFound"), wsBtn());
+  document.title = `${course.title} | ${t("벨라온 온라인 클래스", "cd.siteTitle")}`;
 
-  if (!me) {
-    gate("로그인 후 수강할 수 있습니다.", `<button type="button" class="btn solid" id="loginBtn">로그인 / 회원가입</button>`);
-    $("#loginBtn").onclick = login;
-    return;
-  }
-  if (needsVerify(me.user)) { app.innerHTML = verifyGateHtml(me.user); bindVerifyGate(app, me.user); return; }
+  // 목차(공개 칸)와 운영 기준은 누구나 읽을 수 있다
+  const [ls, pol] = await Promise.all([
+    getDocs(query(collection(db, "courses", cid, "lessons"), orderBy("order"))).catch(() => null),
+    loadPolicy(),
+  ]);
+  lessons = ls ? ls.docs.map((d) => ({ id: d.id, ...d.data() })) : [];
+  policy = pol;
+
+  if (!me) return renderDetail("login");
+  if (needsVerify(me.user)) return renderDetail("verify");
   app.onclick = null;
 
   const es = await getDoc(doc(db, "enrollments", `${me.uid}_${cid}`)).catch(() => null);
   enr = es?.exists() ? toEnr(es.id, es.data()) : null;
   const state = enrollState(enr, Date.now());
   preview = state !== "active" && me.isAdmin;
-  if (state !== "active" && !preview) {
-    const msg = {
-      none: "수강 신청 후 시청할 수 있습니다.",
-      upcoming: `수강 시작일은 ${fmtDate(enr?.startAt)} 입니다.`,
-      expired: `수강 기간이 끝났습니다. (종료일 ${fmtDate(enr?.endAt)})`,
-      revoked: "수강권이 없습니다. 문의해 주세요.",
-    }[state];
-    return gate(msg, askBtns);
-  }
+  if (state !== "active" && !preview) return renderDetail(state);
   if (preview) enr = null;
 
-  policy = await loadPolicy();
-  if (!policy) return gate("운영 기준이 아직 설정되지 않았습니다. 관리자에게 문의해 주세요.", askBtns);
+  if (!policy) return notice("운영 기준이 아직 설정되지 않았습니다. 관리자에게 문의해 주세요.", askBtns());
+  if (!lessons.length) return notice("아직 등록된 영상이 없습니다. 곧 열립니다.", `<a class="btn" href="/mypage.html">My Class</a>`);
 
-  const ls = await getDocs(query(collection(db, "courses", cid, "lessons"), orderBy("order")));
-  lessons = ls.docs.map((d) => ({ id: d.id, ...d.data() }));
-  if (!lessons.length) return gate("아직 등록된 영상이 없습니다. 곧 열립니다.", `<a class="btn" href="/mypage.html">My Class</a>`);
+  // 영상 주소(수강생 전용 칸)를 차시 ID 로 짝지어 붙인다
+  const vs = await getDocs(collection(db, "courses", cid, "videos"));
+  const vid = {};
+  vs.forEach((d) => { vid[d.id] = d.data().youtubeId; });
+  lessons = lessons.map((l) => ({ ...l, youtubeId: vid[l.id] || "" })).filter((l) => l.youtubeId);
+  if (!lessons.length) return notice("아직 등록된 영상이 없습니다. 곧 열립니다.", `<a class="btn" href="/mypage.html">My Class</a>`);
 
   progress = preview ? null : ((await getDoc(doc(db, "progress", `${me.uid}_${cid}`))).data() || null);
 
@@ -188,6 +281,8 @@ if (!CONFIGURED) {
   watchUser(async ({ user, isAdmin }) => {
     me = user ? { uid: user.uid, isAdmin, user } : null;
     try { await enter(); }
-    catch (e) { console.error(e); gate("강의실을 열지 못했습니다. 잠시 후 다시 시도해 주세요.", askBtns); }
+    catch (e) { console.error(e); notice(t("강의실을 열지 못했습니다. 잠시 후 다시 시도해 주세요.", "cd.openFail"), askBtns()); }
   });
+  // 상세 화면은 언어를 바꾸면 그 자리에서 다시 그린다(강의실은 한국어 화면)
+  onLangChange(() => { if (detailState && course) renderDetail(detailState); });
 }

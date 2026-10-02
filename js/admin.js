@@ -1,6 +1,6 @@
 // =========================================================
 // 관리자 페이지 (/admin/) — 설계 §2 관리자 기능
-//  ① 강좌·차시  ② 회원·수강권  ③ 수강 현황
+//  ① 강좌·차시  ② 회원·수강권  ③ 수강 현황  ④ 수강 코드
 // 관리자 판정·쓰기 권한은 firestore.rules 가 최종 결정한다(이 화면은 보여주기만).
 // =========================================================
 import {
@@ -12,7 +12,7 @@ import {
 } from "./common.js";
 import {
   DEFAULT_POLICY, enrollState, fmtLeft, courseStat, fmtDur, fmtPct, fmtDate,
-  kstDateStr, startOfKstDay, endOfKstDay, defaultEndStr,
+  kstDateStr, startOfKstDay, endOfKstDay, defaultEndStr, courseDays, CODE_RE, normCode,
 } from "./core.js";
 import { parseYouTubeId, probeVideo } from "./youtube.js";
 
@@ -45,9 +45,15 @@ async function reloadEnrs() {
   const e = await getDocs(collection(db, "enrollments"));
   S.enrs = e.docs.map((d) => toEnr(d.id, d.data()));
 }
+// 차시 = 목차(lessons, 공개) + 영상 주소(videos, 수강생 전용) — 같은 차시 ID 로 짝지어 합친다
 async function loadLessons(cid) {
-  const s = await getDocs(query(collection(db, "courses", cid, "lessons"), orderBy("order")));
-  return s.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const [s, v] = await Promise.all([
+    getDocs(query(collection(db, "courses", cid, "lessons"), orderBy("order"))),
+    getDocs(collection(db, "courses", cid, "videos")),
+  ]);
+  const vid = {};
+  v.forEach((d) => { vid[d.id] = d.data().youtubeId; });
+  return s.docs.map((d) => ({ id: d.id, ...d.data(), youtubeId: vid[d.id] || "" }));
 }
 
 // ---------- 운영 기준 ----------
@@ -82,6 +88,7 @@ function renderShell() {
       <button type="button" data-tab="courses">강좌·차시</button>
       <button type="button" data-tab="members">회원·수강권</button>
       <button type="button" data-tab="status">수강 현황</button>
+      <button type="button" data-tab="codes">수강 코드</button>
     </div><div id="panel"></div>`;
   root.querySelector(".tabs").onclick = (e) => {
     const b = e.target.closest("[data-tab]");
@@ -91,7 +98,7 @@ function renderShell() {
 }
 function renderTab() {
   root.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === S.tab));
-  ({ courses: renderCourses, members: renderMembers, status: renderStatus })[S.tab]();
+  ({ courses: renderCourses, members: renderMembers, status: renderStatus, codes: renderCodes })[S.tab]();
 }
 
 // =========================================================
@@ -271,6 +278,7 @@ function renderLessons() {
         next.forEach((x, k) => { x.order = k + 1; });
         await commitLessons(cid, next, (bt) => {
           bt.delete(doc(db, "courses", cid, "lessons", l.id));
+          bt.delete(doc(db, "courses", cid, "videos", l.id));
           next.forEach((x) => bt.update(doc(db, "courses", cid, "lessons", x.id), { order: x.order }));
         });
         renderLessons(); toast("삭제했습니다.");
@@ -295,9 +303,11 @@ function renderLessons() {
         const ref = doc(collection(db, "courses", cid, "lessons"));
         const nl = { id: ref.id, title, youtubeId: vid, durationSec: v.durationSec, order: S.lessons.length + 1 };
         try {
-          await commitLessons(cid, [...S.lessons, nl], (bt) => bt.set(ref, {
-            title, youtubeId: vid, durationSec: v.durationSec, order: nl.order, createdAt: serverTimestamp(),
-          }));
+          // 목차(공개)와 영상 주소(수강생 전용)를 한 번에 — 둘 중 하나만 저장되는 일이 없게
+          await commitLessons(cid, [...S.lessons, nl], (bt) => {
+            bt.set(ref, { title, durationSec: v.durationSec, order: nl.order, createdAt: serverTimestamp() });
+            bt.set(doc(db, "courses", cid, "videos", ref.id), { youtubeId: vid });
+          });
           renderLessons(); toast("차시를 추가했습니다.");
         } catch (err) { console.error(err); toast("추가하지 못했습니다: " + (err.code || err.message)); }
       };
@@ -352,7 +362,7 @@ function renderMemberDetail() {
         <td class="per">${fmtDate(e.startAt)} ~ ${fmtDate(e.endAt)}${st === "active" ? ` <span class="hint">(${fmtLeft(e.endAt, now)})</span>` : ""}</td>
         <td><span class="badge ${st === "active" ? "active" : ""}">${STATE_TXT[st]}</span></td>
         <td>${e.extendedCount ? `사용 (${fmtDate(e.extendedAt)})` : "-"}</td>
-        <td class="hint">${e.source === "payment" ? "결제" : "관리자"} ${esc(e.grantedBy || "")}</td>
+        <td class="hint">${e.source === "code" ? `코드 ${esc(e.code || "")}` : `${e.source === "payment" ? "결제" : "관리자"} ${esc(e.grantedBy || "")}`}</td>
         <td class="hint">${esc(e.memo || "")}</td>
         <td><button type="button" class="btn sm" data-act="edit">기간 수정</button>
           ${e.status === "active" ? `<button type="button" class="btn sm" data-act="revoke">회수</button>` : `<button type="button" class="btn sm" data-act="restore">복구</button>`}</td></tr>`;
@@ -370,7 +380,7 @@ function renderMemberDetail() {
 
   const setEnd = () => {
     const c = S.courses.find((x) => x.id === $("#gC").value);
-    const days = c?.defaultDays || S.policy.defaultDays;
+    const days = courseDays(c, S.policy);
     $("#gE").value = defaultEndStr($("#gS").value || today(), days);
     $("#gHint").textContent = ` 기본 ${days}일 (시작일 포함)`;
   };
@@ -478,6 +488,91 @@ async function renderStatus() {
       <td>${r.cs.doneCount}/${r.cs.count}</td>
       <td>${fmtDate(r.last)}</td>
       <td>${r.done ? fmtDate(r.done) : "-"}</td></tr>`).join("") || `<tr><td colspan="10" class="hint">이 강좌의 수강생이 없습니다.</td></tr>`}</tbody></table>`;
+}
+
+// =========================================================
+// ④ 수강 코드 (설계 §12) — 회원이 상세 페이지에서 코드를 넣으면 서버 함수가 확인 후 바로 수강권 생성
+// =========================================================
+const codeState = (c, now) => !c.active ? "중지"
+  : c.expiresAt && now > c.expiresAt ? "마감일 지남"
+  : c.maxUses != null && c.usedCount >= c.maxUses ? "인원 마감" : "사용 가능";
+
+async function renderCodes() {
+  if (!S.courses.length) { $("#panel").innerHTML = `<div class="empty">먼저 강좌를 만드세요.</div>`; return; }
+  $("#panel").innerHTML = `<div class="card-box" style="margin-bottom:22px">
+      <h4 style="font-weight:500;margin-bottom:6px">새 수강 코드</h4>
+      <p class="hint" style="margin-bottom:14px">회원이 강좌 상세 페이지에서 이 코드를 넣으면 <b>관리자 승인 없이 바로</b> 수강권이 생깁니다
+        (오늘부터 강좌 기본 수강일 · 연장 1회 동일). 한 사람은 한 코드를 1번만 쓸 수 있고, 이메일 인증을 마친 회원만 쓸 수 있습니다.</p>
+      <form class="form" id="kForm" autocomplete="off"><div class="row">
+        <label class="field">코드<input name="code" placeholder="예: comos2026" maxlength="30">
+          <span class="hint">영문·숫자·하이픈(-) 4~30자 · 대소문자 구분 없음</span></label>
+        <label class="field">강좌<select name="course">${S.courses.map((c) => `<option value="${esc(c.id)}">${esc(c.title)}${c.published ? "" : " (비공개)"}</option>`).join("")}</select></label>
+        <label class="field">인원 제한<input name="max" type="number" min="1" placeholder="비우면 무제한"></label>
+        <label class="field">사용 마감일<input name="until" type="date"><span class="hint">비우면 마감 없음 · 그날 23:59까지</span></label>
+        <label class="field">메모<input name="memo" placeholder="예: 코스모스 10월 단체 수강"></label>
+      </div><div><button type="submit" class="btn solid sm">코드 만들기</button></div></form>
+    </div>
+    <div class="tbl-wrap"><div class="empty">불러오는 중…</div></div>`;
+  $("#kForm").onsubmit = (e) => { e.preventDefault(); createCode(); };
+
+  const snap = await getDocs(collection(db, "codes"));
+  if (S.tab !== "codes") return;
+  const now = Date.now();
+  const list = snap.docs.map((d) => ({ id: d.id, ...d.data(), expiresAt: tsMs(d.data().expiresAt), createdAt: tsMs(d.data().createdAt) }))
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  $("#panel .tbl-wrap").innerHTML = `<table class="tbl"><thead><tr>
+      <th>코드</th><th>강좌</th><th>사용</th><th>마감일</th><th>상태</th><th>메모</th><th>만든 날</th><th>관리</th></tr></thead>
+    <tbody>${list.map((c) => {
+      const st = codeState(c, now);
+      return `<tr data-k="${esc(c.id)}"><td><b style="font-weight:500">${esc(c.id)}</b></td><td>${esc(courseTitle(c.courseId))}</td>
+        <td>${c.usedCount || 0}${c.maxUses != null ? ` / ${c.maxUses}명` : "명 (무제한)"}</td>
+        <td>${c.expiresAt ? fmtDate(c.expiresAt) : "-"}</td>
+        <td><span class="badge ${st === "사용 가능" ? "active" : ""}">${st}</span></td>
+        <td class="hint">${esc(c.memo || "")}</td><td class="hint">${fmtDate(c.createdAt)}</td>
+        <td><button type="button" class="btn sm" data-act="uses">사용자</button>
+          <button type="button" class="btn sm" data-act="${c.active ? "stop" : "resume"}">${c.active ? "중지" : "다시 사용"}</button></td></tr>
+        <tr class="uses-row" data-uses="${esc(c.id)}" hidden><td colspan="8"></td></tr>`;
+    }).join("") || `<tr><td colspan="8" class="hint">아직 만든 코드가 없습니다.</td></tr>`}</tbody></table>`;
+
+  $("#panel .tbl-wrap").onclick = async (ev) => {
+    const b = ev.target.closest("[data-act]");
+    if (!b) return;
+    const id = b.closest("[data-k]").dataset.k;
+    try {
+      if (b.dataset.act === "stop" || b.dataset.act === "resume") {
+        await updateDoc(doc(db, "codes", id), { active: b.dataset.act === "resume" });
+        toast(b.dataset.act === "stop" ? "코드를 중지했습니다. 이미 받은 수강권은 그대로입니다." : "코드를 다시 쓸 수 있게 했습니다.");
+        return renderCodes();
+      }
+      const row = $(`#panel [data-uses="${CSS.escape(id)}"]`);
+      if (!row.hidden) { row.hidden = true; return; }
+      const us = await getDocs(collection(db, "codes", id, "uses"));
+      const rows = us.docs.map((d) => ({ ...d.data(), at: tsMs(d.data().at) })).sort((a, b) => (a.at || 0) - (b.at || 0));
+      row.querySelector("td").innerHTML = rows.length
+        ? rows.map((u) => `${esc(userOf(u.uid).name || "-")} <span class="hint">${esc(u.email || userOf(u.uid).email)} · ${fmtDate(u.at)}</span>`).join("<br>")
+        : `<span class="hint">아직 사용한 회원이 없습니다.</span>`;
+      row.hidden = false;
+    } catch (err) { console.error(err); toast("처리하지 못했습니다: " + (err.code || err.message)); }
+  };
+}
+
+async function createCode() {
+  const f = $("#kForm");
+  const id = normCode(f.code.value);
+  const max = f.max.value.trim();
+  if (!CODE_RE.test(id)) return toast("코드는 영문·숫자·하이픈(-) 4~30자로 정해 주세요.");
+  if (max && !(parseInt(max, 10) >= 1)) return toast("인원 제한은 1명 이상이어야 합니다(무제한이면 비워 두세요).");
+  if (f.until.value && f.until.value < today()) return toast("사용 마감일이 오늘보다 앞입니다.");
+  try {
+    if ((await getDoc(doc(db, "codes", id))).exists()) return toast("이미 있는 코드입니다. 다른 글자로 정해 주세요.");
+    await setDoc(doc(db, "codes", id), {
+      courseId: f.course.value, maxUses: max ? parseInt(max, 10) : null,
+      expiresAt: f.until.value ? Timestamp.fromMillis(endOfKstDay(f.until.value)) : null,
+      active: true, memo: f.memo.value.trim(), usedCount: 0, createdBy: S.me.email, createdAt: serverTimestamp(),
+    });
+    toast(`코드 ${id} 를 만들었습니다.`);
+    renderCodes();
+  } catch (e) { console.error(e); toast("만들지 못했습니다: " + (e.code || e.message)); }
 }
 
 // ---------- 시작 ----------

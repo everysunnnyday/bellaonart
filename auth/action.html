@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>관리자 | 벨라온 온라인 클래스</title>
+<title>계정 확인 | 벨라온 아트플라워 스튜디오</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="/css/base.css?v=1">
@@ -16,18 +17,15 @@
 <body>
 <header id="site-header"></header>
 
+<!-- 인증 메일·비밀번호 재설정 메일의 링크가 오는 곳 (Firebase 콘솔 '작업 URL' = 이 주소) -->
 <main class="page">
   <div class="wrap">
-    <div class="page-head">
-      <span class="eyebrow">Admin</span>
-      <h1>클래스 관리</h1>
-      <div class="policy" id="policy" style="margin-top:12px"></div>
-    </div>
-    <div id="admin"><div class="empty">확인 중…</div></div>
+    <div class="sec-head"><h1 class="section-title">Account</h1><span class="rule"></span></div>
+    <div id="act" class="act-box"><div class="empty">확인 중…</div></div>
   </div>
 </main>
 
 <footer id="site-footer"></footer>
-<script type="module" src="/js/admin.js?v=2"></script>
+<script type="module" src="/js/auth-action.js?v=1"></script>
 </body>
 </html>

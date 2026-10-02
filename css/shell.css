@@ -14,7 +14,7 @@
 .site-hd .brand img{height:50px;width:auto}
 .site-hd .menu{display:flex;align-items:center;gap:clamp(18px,2.6vw,40px)}
 .menu-main{display:flex;align-items:center;gap:clamp(16px,2.2vw,34px)}
-.menu-main a{position:relative;font-family:var(--caps);font-weight:500;font-size:.82rem;letter-spacing:.08em;color:var(--ink);opacity:.78;transition:opacity .2s;white-space:nowrap}
+.menu-main a{position:relative;font-family:var(--caps);font-weight:500;font-size:1rem;letter-spacing:.08em;color:var(--ink);opacity:.78;transition:opacity .2s;white-space:nowrap}
 .menu-main a:hover,.menu-main a.on{opacity:1}
 .menu-main a::after{content:"";position:absolute;left:0;bottom:-6px;width:0;height:1px;background:var(--pink-deep);transition:width .25s}
 .menu-main a:hover::after,.menu-main a.on::after{width:100%}
@@ -23,6 +23,7 @@
 .hd-auth{display:flex;align-items:center;gap:12px}
 .hd-auth a,.hd-auth button{background:none;border:0;padding:2px 0;font:inherit;color:inherit;cursor:pointer;white-space:nowrap;transition:color .2s}
 .hd-auth a:hover,.hd-auth button:hover,.hd-auth a.on{color:var(--pink-deep)}
+.hd-name{max-width:9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);font-weight:500}   /* 긴 이름은 … 으로 */
 .lang{display:flex;align-items:center;gap:4px;color:var(--stone)}
 .lang button{background:none;border:0;padding:2px 2px;font:inherit;font-size:.72rem;letter-spacing:.06em;color:var(--muted);cursor:pointer}
 .lang button.on{color:var(--ink);font-weight:700}
@@ -52,6 +53,26 @@
   :root{--header-h:72px}
   .site-hd .brand img{height:40px}
 }
+
+/* ---------- 공용 부품 (공개 페이지·마이페이지가 함께 씀 — 한 곳에서만 정의) ---------- */
+/* 섹션 제목: 가운데 세리프 제목 + 분홍 밑줄 (Art & Design · My Page 등) */
+.sec-head{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;margin-bottom:clamp(36px,5vw,60px)}
+.section-title{font-family:var(--serif);font-weight:500;font-size:clamp(1.2rem,2vw,1.55rem);line-height:1.35;color:var(--ink)}
+.rule{display:block;width:44px;height:2px;background:var(--pink-deep)}
+/* 이미지 틀 */
+.ph{position:relative;background:radial-gradient(120% 90% at 70% 12%,#F7F0EC 0%,#EFE6DF 55%,#E7DBD2 100%);overflow:hidden;border-radius:8px}
+.ph img{width:100%;height:100%;object-fit:cover}
+/* Workshop 강좌 카드 (예전 MFAI 카드 모양) — js/course-list.js 가 그림 */
+.edu{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,280px));justify-content:center;gap:clamp(20px,2.6vw,34px)}
+.edu .card{text-align:center;display:block}
+.edu .card .ph{aspect-ratio:4/5;transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s cubic-bezier(.22,1,.36,1)}
+.edu .card .ph img{transition:transform .5s cubic-bezier(.22,1,.36,1)}
+.edu .card:hover .ph{transform:translateY(-5px);box-shadow:var(--shadow)}
+.edu .card:hover .ph img{transform:scale(1.045)}
+.edu .card h4{font-family:var(--serif);font-size:1.18rem;font-weight:500;margin-top:16px;color:var(--ink)}
+.edu .card .meta{font-size:.8rem;color:var(--muted);margin-top:4px}
+.edu .card .badge{display:inline-block;margin-top:8px;font-size:.72rem;padding:2px 10px;border-radius:999px;border:1px solid var(--sage);color:var(--sage-deep);background:rgba(157,170,139,.12)}
+.edu .card .badge.off{border-color:var(--line);color:var(--muted);background:none}
 
 /* ---------- 하단 ---------- */
 .site-ft{border-top:1px solid var(--line);padding:30px 0;text-align:center;background:var(--canvas)}

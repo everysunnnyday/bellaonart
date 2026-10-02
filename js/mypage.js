@@ -8,14 +8,20 @@ import {
 } from "./firebase.js";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast, dialog, authMsg,
-  KAKAO_CHANNEL, DEFAULT_THUMB, needsVerify, verifyGateHtml, bindVerifyGate,
+  KAKAO_CHANNEL, DEFAULT_THUMB, needsVerify, verifyGateHtml, bindVerifyGate, refreshAuthArea,
 } from "./common.js";
 import { enrollState, canExtend, daysLeft, fmtLeft, courseStat, fmtPct, fmtDate, DAY } from "./core.js";
+import { mountCourseList } from "./course-list.js";
 
 initShell({ active: "mypage", kakao: false });
 const box = $("#my");
 const params = new URLSearchParams(location.search);
 let tab = params.get("tab") === "profile" ? "profile" : "class";
+// 인증 메일 링크(/auth/action.html)에서 인증을 마치고 넘어온 경우 — 안내 한 번 띄우고 주소에서 표시를 지운다
+if (params.get("verified") === "1") {
+  history.replaceState(null, "", location.pathname);
+  setTimeout(() => toast("이메일 인증이 완료되었습니다. 이제 강의를 볼 수 있습니다.", 5000), 600);
+}
 let me = null, policy = null, items = [];
 
 const STATE_TXT = { active: "수강 중", upcoming: "시작 전", expired: "기간 종료", revoked: "수강권 회수" };
@@ -50,7 +56,7 @@ async function loadClass() {
     const course = (await getDoc(doc(db, "courses", e.courseId)).catch(() => null))?.data() || { title: "(삭제된 강좌)" };
     const prog = (await getDoc(doc(db, "progress", `${me.uid}_${e.courseId}`)).catch(() => null))?.data() || null;
     let stat = null;
-    if (state === "active" && policy) {   // 차시(영상 길이)는 유효 수강권이 있을 때만 읽힌다
+    if (state === "active" && policy) {   // 수강률은 수강 중인 강좌만 계산
       const ls = await getDocs(query(collection(db, "courses", e.courseId, "lessons"), orderBy("order"))).catch(() => null);
       if (ls) stat = courseStat(prog, ls.docs.map((x) => ({ id: x.id, ...x.data() })), policy);
     }
@@ -63,13 +69,16 @@ async function loadClass() {
 }
 
 function renderClass() {
-  if (!items.length) {
-    box.innerHTML = `<div class="empty">아직 수강 중인 강좌가 없습니다.<br>
-      <a href="/workshop.html">Workshop 둘러보기</a> · <a href="${KAKAO_CHANNEL}" target="_blank" rel="noopener">수강 문의(카카오톡)</a></div>`;
-    return;
-  }
   const now = Date.now();
-  box.innerHTML = `<div class="my-list">${items.map(({ e, state, course, prog, stat, doneCount }, i) => {
+  // 수강 중(또는 시작 전)인 강좌가 없으면 — 기간 끝난 강좌만 있을 때 포함 — 문의 버튼 + Workshop 목록
+  // (이때는 지난 강좌 카드의 [수강 문의] 버튼을 빼고 아래 큰 버튼 하나만 둔다 — 중복 방지)
+  const live = items.some((it) => it.state === "active" || it.state === "upcoming");
+  const browse = live ? "" : `<div class="my-empty">
+      <p>${items.length ? "지금 수강 중인 강좌가 없습니다." : "아직 수강 중인 강좌가 없습니다."}</p>
+      <a class="btn solid" href="${KAKAO_CHANNEL}" target="_blank" rel="noopener">카카오톡으로 수강 문의</a>
+    </div>
+    <div class="my-browse"><h2 class="section-title">Workshop</h2><span class="rule"></span><div id="wsList"></div></div>`;
+  box.innerHTML = `${items.length ? `<div class="my-list">${items.map(({ e, state, course, prog, stat, doneCount }, i) => {
     const left = daysLeft(e.endAt, now);
     const period = `${fmtDate(e.startAt)} ~ ${fmtDate(e.endAt)}`;
     const leftTxt = state === "active" ? fmtLeft(e.endAt, now) : STATE_TXT[state];
@@ -94,11 +103,12 @@ function renderClass() {
       <div class="acts">
         ${state === "active" ? `<a class="btn solid" href="/class/watch.html?c=${encodeURIComponent(e.courseId)}">${pct ? "이어보기" : "강의실 입장"}</a>` : ""}
         ${ext ? `<button type="button" class="btn sage" data-ext="${i}">수강 연장 +${policy.extendDays}일 (무료)</button>` : ""}
-        ${state === "expired" || state === "revoked" ? `<a class="btn" href="${KAKAO_CHANNEL}" target="_blank" rel="noopener">수강 문의</a>` : ""}
+        ${(state === "expired" || state === "revoked") && live ? `<a class="btn" href="${KAKAO_CHANNEL}" target="_blank" rel="noopener">수강 문의</a>` : ""}
       </div>
     </div>`;
-  }).join("")}</div>`;
+  }).join("")}</div>` : ""}${browse}`;
   box.querySelectorAll("[data-ext]").forEach((b) => { b.onclick = () => extend(items[+b.dataset.ext]); });
+  if (!live) mountCourseList($("#wsList"));   // Workshop 페이지와 같은 목록 코드(js/course-list.js)
 }
 
 async function extend(it) {
@@ -166,6 +176,7 @@ async function renderProfile() {
     try {
       await updateProfile(me, { displayName: name });
       await updateDoc(doc(db, "users", me.uid), { name, phone });
+      refreshAuthArea();   // 상단 "이름님" 바로 바꾸기
       toast("저장했습니다.");
     } catch (err) { console.error(err); toast("저장하지 못했습니다: " + (err.code || err.message)); }
   };

@@ -26,6 +26,13 @@ export const endOfKstDay = (dateStr) => Date.parse(`${dateStr}T23:59:59.999+09:0
 export const addDaysStr = (dateStr, n) => kstDateStr(startOfKstDay(dateStr) + n * DAY);
 // 기간은 시작일 포함 (60일: 10/2 시작 → 11/30 종료)
 export const defaultEndStr = (startStr, days) => addDaysStr(startStr, days - 1);
+// 강좌의 기본 수강일 — 강좌에 따로 정한 값이 없으면 운영 기준(policy). 관리자 부여·수강 코드가 같이 쓴다.
+export const courseDays = (course, policy) => course?.defaultDays || policy.defaultDays;
+
+// 수강 코드 글자 규칙 — 영문 소문자·숫자·하이픈 4~30자, 대소문자 구분 없음(소문자로 바꿔 저장·비교)
+// 관리자 화면(만들기)·서버 함수(확인)·보안 규칙이 같은 규칙을 쓴다.
+export const CODE_RE = /^[a-z0-9-]{4,30}$/;
+export const normCode = (s) => String(s ?? "").trim().toLowerCase();
 // 남은 일수 = 오늘 포함 (달력 기준). 종료일 당일 = 1, 시작일 = 전체 일수.
 // 화면 표시·리마인드 판정이 모두 이 정의 하나를 쓴다.
 export const daysLeft = (endMs, nowMs) => kstDayNo(endMs) - kstDayNo(nowMs) + 1;

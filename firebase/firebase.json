@@ -8,12 +8,13 @@
       "source": "functions",
       "codebase": "default",
       "predeploy": ["node scripts/sync-core.js"],
-      "ignore": ["node_modules", ".git", "*.log", "*.test.js"]
+      "ignore": ["node_modules", ".git", "*.log", "*.test.js", ".secret.local"]
     }
   ],
   "emulators": {
     "auth": { "port": 9299 },
     "firestore": { "port": 8285 },
+    "functions": { "port": 5099 },
     "ui": { "enabled": false },
     "singleProjectMode": true
   }
