@@ -29,6 +29,16 @@ export const defaultEndStr = (startStr, days) => addDaysStr(startStr, days - 1);
 // 강좌의 기본 수강일 — 강좌에 따로 정한 값이 없으면 운영 기준(policy). 관리자 부여·수강 코드가 같이 쓴다.
 export const courseDays = (course, policy) => course?.defaultDays || policy.defaultDays;
 
+// 강좌 썸네일을 못 가져올 때 쓰는 기본 그림 — 사이트(common.js thumbOf)·서버 함수(courseThumbImg)가 함께 쓴다
+export const DEFAULT_THUMB = "/images/class/paper-flower.jpg";
+
+// 수강료 표시 — 관리자가 쓴 그대로 두되 4자리 이상 숫자에 천 단위 쉼표, 숫자만 썼으면 "원"을 붙인다
+// 예: "30000" → "30,000원" · "150000원" → "150,000원" · "150,000원" → 그대로 · "무료" → 그대로
+export const fmtPrice = (s) => {
+  const v = String(s ?? "").trim().replace(/\d{4,}/g, (d) => d.replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+  return /^\d[\d,]*$/.test(v) ? v + "원" : v;
+};
+
 // 수강 코드 글자 규칙 — 영문 소문자·숫자·하이픈 4~30자, 대소문자 구분 없음(소문자로 바꿔 저장·비교)
 // 관리자 화면(만들기)·서버 함수(확인)·보안 규칙이 같은 규칙을 쓴다.
 export const CODE_RE = /^[a-z0-9-]{4,30}$/;

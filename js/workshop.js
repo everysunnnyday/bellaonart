@@ -1,8 +1,27 @@
-// Workshop (/workshop.html) — 공개 강좌 카드(관리자가 정한 순서) + 로그인 시 내 수강 상태
-// 목록 코드는 js/course-list.js 한 곳(마이페이지와 공용)
+// Workshop (/workshop.html[?cat=카테고리ID])
+//  - 기본: 카테고리 카드 3장(메인과 같은 사진) + 카드 아래 "강좌 N개 / 준비 중"
+//  - ?cat=paper-flower 등: 그 카테고리의 강의 목록(1차시 유튜브 썸네일 · 강좌 정보 · 내 수강 상태)
+// 카드·목록 코드는 js/course-list.js 한 곳(메인·마이페이지와 공용)
 import { initShell, initReveal, $ } from "./common.js";
-import { mountCourseList } from "./course-list.js";
+import { mountCategories, mountCategoryList, categoryOf } from "./course-list.js";
+import { t, onLangChange } from "./i18n.js";
 
 initShell({ active: "workshop" });
-mountCourseList($("#list"));
+const cat = categoryOf(new URLSearchParams(location.search).get("cat"));
+
+if (cat) {
+  // 제목을 카테고리 이름으로 · 아래에 Workshop 으로 돌아가는 링크
+  const head = $(".sec-head");
+  head.querySelector(".section-title").textContent = cat.title;
+  const back = document.createElement("a");
+  back.className = "back-link";
+  back.href = "/workshop.html";
+  const label = () => { back.textContent = t("← 전체 Workshop", "ws.back"); };
+  label(); onLangChange(label);
+  head.appendChild(back);
+  document.title = `${cat.title} | ${document.title}`;
+  mountCategoryList($("#list"), cat.id);
+} else {
+  mountCategories($("#list"), { info: true });
+}
 initReveal();

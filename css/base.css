@@ -24,6 +24,8 @@
   --caps:"Cormorant Garamond",serif;   /* 메뉴·소제목·로고 글씨 — 대소문자 구분 세리프 (아리따 부리 → 2026-10-03 써니님 요청으로 교체) */
   --sans:"Noto Sans KR","Pretendard",-apple-system,sans-serif;
 
+  --title-size:23px;       /* 회원·관리자 페이지 제목 글자 크기(2026-10-03 써니님) — 여기만 고치면 함께 바뀜 */
+
   --maxw:1240px;           /* 기본 콘텐츠 폭(소개 페이지는 1080px 로 덮어씀) */
   --gutter:clamp(20px,5vw,72px);
   --sec-y:clamp(56px,8vw,120px);

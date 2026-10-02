@@ -8,19 +8,25 @@ import {
 } from "./firebase.js";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast, dialog, authMsg,
-  KAKAO_CHANNEL, DEFAULT_THUMB, needsVerify, verifyGateHtml, bindVerifyGate, refreshAuthArea,
+  KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate, refreshAuthArea,
 } from "./common.js";
 import { enrollState, canExtend, daysLeft, fmtLeft, courseStat, fmtPct, fmtDate, DAY } from "./core.js";
-import { mountCourseList } from "./course-list.js";
+import { mountCategories } from "./course-list.js";
 
 initShell({ active: "mypage", kakao: false });
 const box = $("#my");
 const params = new URLSearchParams(location.search);
 let tab = params.get("tab") === "profile" ? "profile" : "class";
-// 인증 메일 링크(/auth/action.html)에서 인증을 마치고 넘어온 경우 — 안내 한 번 띄우고 주소에서 표시를 지운다
-if (params.get("verified") === "1") {
-  history.replaceState(null, "", location.pathname);
-  setTimeout(() => toast("이메일 인증이 완료되었습니다. 이제 강의를 볼 수 있습니다.", 5000), 600);
+// 인증 메일 링크로 인증을 마치고 넘어온 경우(Firebase 안내 페이지 [계속] 또는 /auth/action.html)
+// → 브라우저가 기억한 '미인증' 상태를 새로 읽은 뒤 안내 한 번 · 주소에서 표시를 지운다
+let justVerified = params.get("verified") === "1";
+if (justVerified) history.replaceState(null, "", location.pathname);
+async function afterVerifyLink(user) {
+  justVerified = false;
+  if (user && !user.emailVerified) {
+    try { await user.reload(); if (auth.currentUser?.emailVerified) await auth.currentUser.getIdToken(true); } catch { /* 아래 안내로 충분 */ }
+  }
+  toast(user ? "이메일 인증이 완료되었습니다. 이제 강의를 볼 수 있습니다." : "이메일 인증이 완료되었습니다. 로그인하면 강의를 볼 수 있습니다.", 5000);
 }
 let me = null, policy = null, items = [];
 
@@ -87,7 +93,7 @@ function renderClass() {
     const complete = stat?.complete || !!prog?.completedAt;
     const ext = policy && canExtend(e, now);
     return `<div class="my-item">
-      <div class="thumb" style="background-image:url('${esc(course.thumb || DEFAULT_THUMB)}')"></div>
+      <div class="thumb" style="background-image:url('${esc(thumbOf(course, e.courseId))}')"></div>
       <div>
         <h3>${esc(course.title)}</h3>
         <div class="line">
@@ -108,7 +114,7 @@ function renderClass() {
     </div>`;
   }).join("")}</div>` : ""}${browse}`;
   box.querySelectorAll("[data-ext]").forEach((b) => { b.onclick = () => extend(items[+b.dataset.ext]); });
-  if (!live) mountCourseList($("#wsList"));   // Workshop 페이지와 같은 목록 코드(js/course-list.js)
+  if (!live) mountCategories($("#wsList"), { info: true });   // Workshop 페이지와 같은 카테고리 카드(js/course-list.js)
 }
 
 async function extend(it) {
@@ -216,7 +222,8 @@ async function renderProfile() {
 }
 
 // =========================================================
-watchUser(({ user }) => {
+watchUser(async ({ user }) => {
+  if (justVerified) await afterVerifyLink(user);
   me = user;
   document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
   if (!user) {

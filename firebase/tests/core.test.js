@@ -4,9 +4,21 @@ import assert from "node:assert/strict";
 import {
   DAY, DEFAULT_POLICY as P, kstDateStr, startOfKstDay, endOfKstDay, defaultEndStr, daysLeft, fmtLeft,
   enrollState, canExtend, needsReminder, addSegment, watchedSec, isContinuous, lessonStat, courseStat, fmtDur,
+  fmtPrice,
 } from "../../js/core.js";
 
 const at = (dateStr, hhmm = "09:00") => Date.parse(`${dateStr}T${hhmm}:00+09:00`);
+
+test("수강료 표시: 천 단위 쉼표 · 숫자만 쓰면 '원' · 이미 쓴 쉼표·글자는 그대로", () => {
+  assert.equal(fmtPrice("30000"), "30,000원");
+  assert.equal(fmtPrice("150000원"), "150,000원");
+  assert.equal(fmtPrice("150,000원"), "150,000원");
+  assert.equal(fmtPrice("1200000"), "1,200,000원");
+  assert.equal(fmtPrice("900"), "900원");
+  assert.equal(fmtPrice("무료"), "무료");
+  assert.equal(fmtPrice(" 30000 "), "30,000원");
+  assert.equal(fmtPrice(""), "");
+});
 
 test("한국시간 날짜: UTC 15시 = 한국 다음날 0시", () => {
   assert.equal(kstDateStr(Date.parse("2026-10-01T15:00:00Z")), "2026-10-02");

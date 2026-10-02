@@ -1,9 +1,10 @@
 // 벨라온 온라인 클래스 — 서버 함수
 // remindExpiring: 매일 오전 9시(한국시간) 만료 임박 수강권에 리마인드 메일 발송 (설계 §5)
 // redeemCode: 회원이 상세 페이지에서 수강 코드를 넣으면 확인 후 수강권 생성 (설계 §12)
+// courseThumb: 강좌 썸네일 = 1차시 유튜브 썸네일을 대신 가져다줌(영상 ID 숨김)
 // 메일 비밀번호(네이버 앱 비밀번호)는 Firebase 비밀값 저장소의 NAVER_SMTP_PASS 에만 있다 — 코드에 적지 않는다.
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import { initializeApp } from "firebase-admin/app";
@@ -11,6 +12,8 @@ import { getFirestore } from "firebase-admin/firestore";
 import nodemailer from "nodemailer";
 import { runReminders } from "./reminder.js";
 import { redeem } from "./redeem.js";
+import { courseThumb } from "./thumb.js";
+import { DEFAULT_THUMB } from "./core.js";   // 기본 그림은 사이트와 같은 한 곳(js/core.js 복사본)
 
 initializeApp();
 const SMTP_PASS = defineSecret("NAVER_SMTP_PASS");
@@ -37,4 +40,19 @@ export const redeemCode = onCall({ region: "asia-northeast3" }, async (req) => {
     req.data?.code, Date.now());
   logger.info("수강 코드", { uid: a?.uid, 결과: r.ok ? "성공" : r.reason, 강좌: r.courseId });
   return r;
+});
+
+// /courseThumb?c=강좌ID → 그림(하루 동안 브라우저에 보관) · 없으면 사이트 기본 이미지로 넘김
+const SITE = "https://www.bellaonart.com";
+export const courseThumbImg = onRequest({ region: "asia-northeast3", cors: true }, async (req, res) => {
+  try {
+    const r = await courseThumb(getFirestore(), String(req.query.c || ""), (u) => fetch(u));
+    if (r.image) {
+      res.set("Cache-Control", "public, max-age=86400").type(r.type).send(r.image);
+      return;
+    }
+  } catch (e) { logger.warn("썸네일 실패", { c: req.query.c, e: String(e?.message || e) }); }
+  // 기본 이미지: 에뮬레이터(내 PC)에서 부르면 내 PC 사이트로, 실제 서버면 실제 사이트로
+  const base = process.env.FUNCTIONS_EMULATOR === "true" ? "http://localhost:4399" : SITE;
+  res.set("Cache-Control", "public, max-age=600").redirect(302, base + DEFAULT_THUMB);
 });

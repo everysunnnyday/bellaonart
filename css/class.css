@@ -13,7 +13,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .page{padding:clamp(36px,6vw,72px) 0 clamp(60px,8vw,110px)}
 .page-head{margin-bottom:clamp(24px,4vw,40px)}
 .eyebrow{font-family:var(--caps);font-size:.76rem;letter-spacing:.12em;color:var(--sage-deep);font-weight:500}   /* 단어 첫 글자만 대문자 (site.css 와 같은 규칙) */
-.page-head h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.6rem,3.4vw,2.3rem);line-height:1.3;margin-top:10px;letter-spacing:-.01em}
+.page-head h1{font-family:var(--serif);font-weight:400;font-size:var(--title-size);line-height:1.3;margin-top:10px;letter-spacing:-.01em}
 .page-head p{color:var(--muted);margin-top:8px;font-size:.92rem}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:.84rem;letter-spacing:.03em;padding:11px 22px;border-radius:999px;border:1px solid var(--line);background:transparent;transition:.2s;white-space:nowrap}
@@ -102,7 +102,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .detail{max-width:1040px;margin:0 auto}
 .d-top{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(24px,4vw,52px);align-items:start}
 .d-thumb{aspect-ratio:4/3;border-radius:12px;background:var(--line) center/cover no-repeat}
-.d-info h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.6rem,3.2vw,2.3rem);line-height:1.25;margin-top:8px}
+.d-info h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.05rem,1.6vw,1.15rem);line-height:1.4;margin-top:8px}   /* 예전 크기의 절반(2026-10-03 써니님) */
 .d-sum{color:var(--ink-soft);margin-top:10px;font-size:.95rem}
 .d-facts{margin-top:22px;border-top:1px solid var(--line)}
 .d-facts div{display:grid;grid-template-columns:84px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:.9rem}
@@ -120,7 +120,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .code-msg{min-height:1.4em;margin-top:8px;font-size:.84rem;color:var(--muted)}
 .code-msg.err{color:var(--pink-deep)}
 .d-sec{margin-top:clamp(36px,5vw,56px)}
-.d-sec h2{font-family:var(--serif);font-weight:500;font-size:1.35rem;margin-bottom:14px}
+.d-sec h2{font-family:var(--serif);font-weight:500;font-size:1.35rem;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.d-sec h2::before{content:"";width:22px;height:2px;background:var(--pink-deep);flex:none}   /* 제목 앞 짧은 분홍 선(구분용) */
 .d-desc{white-space:pre-line;color:var(--ink-soft);font-size:.95rem;line-height:1.9}
 .d-outline{list-style:none;border-top:1px solid var(--line)}
 .d-outline li{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:13px 4px;border-bottom:1px solid var(--line)}
@@ -154,6 +155,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.84rem}
 .field textarea{min-height:90px;resize:vertical}
 .check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--ink)}
 .hint{font-size:.74rem;color:var(--muted)}
+.cat-checks{display:flex;flex-wrap:wrap;gap:8px 18px;margin:2px 0 2px;color:var(--ink)}   /* 관리자: 강좌 카테고리 고르기 */
 .split{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
 @media (max-width:900px){ .split{grid-template-columns:1fr} }
 .pick-list{list-style:none;display:flex;flex-direction:column;gap:6px}

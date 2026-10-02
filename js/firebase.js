@@ -43,6 +43,10 @@ const PROD_CONFIG = {
 };
 
 export const IS_EMU = ["localhost", "127.0.0.1"].includes(location.hostname);
+
+// 강좌 썸네일 그림 주소 = 서버 함수 courseThumbImg (1차시 유튜브 썸네일을 영상 ID 를 숨긴 채 가져다줌)
+const FN_BASE = IS_EMU ? "http://127.0.0.1:5099/demo-bellaon/asia-northeast3" : "https://asia-northeast3-bellaon-class.cloudfunctions.net";
+export const courseThumbUrl = (cid) => `${FN_BASE}/courseThumbImg?c=${encodeURIComponent(cid)}`;
 export const CONFIGURED = IS_EMU || !!PROD_CONFIG.projectId;
 
 const app = initializeApp(IS_EMU

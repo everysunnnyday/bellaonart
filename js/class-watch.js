@@ -7,9 +7,9 @@ import {
 } from "./firebase.js";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast,
-  notConfiguredHtml, KAKAO_CHANNEL, PHONE, DEFAULT_THUMB, needsVerify, verifyGateHtml, bindVerifyGate,
+  notConfiguredHtml, KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate,
 } from "./common.js";
-import { enrollState, fmtLeft, lessonStat, courseStat, fmtDur, fmtPct, fmtDate, courseDays } from "./core.js";
+import { enrollState, fmtLeft, lessonStat, courseStat, fmtDur, fmtPct, fmtDate, courseDays, fmtPrice } from "./core.js";
 import { LessonTracker } from "./youtube.js";
 import { t, tv, onLangChange } from "./i18n.js";
 
@@ -28,8 +28,8 @@ function notice(msg, btns = "") {
   app.innerHTML = `<div class="gate"><p class="state">${msg}</p><div class="btns">${btns}</div></div>`;
 }
 const wsBtn = () => `<a class="btn" href="/workshop.html">Workshop</a>`;
-const askBtns = () => `<a class="btn solid" href="${KAKAO_CHANNEL}" target="_blank" rel="noopener">${t("카카오톡으로 수강 문의", "cd.askKakao")}</a>
-  <a class="btn" href="tel:${PHONE.replace(/-/g, "")}">${tv("전화 {p}", "cd.askPhone", { p: PHONE })}</a>`;
+// 수강 문의는 카카오톡 하나만(전화번호는 노출하지 않음 — 2026-10-03 써니님)
+const askBtns = () => `<a class="btn solid" href="${KAKAO_CHANNEL}" target="_blank" rel="noopener">${t("카카오톡으로 수강 문의", "cd.askKakao")}</a>`;
 
 // 수강 코드 결과 안내 (사유 = firebase/functions/redeem.js)
 const REDEEM_MSG = {
@@ -55,7 +55,7 @@ function renderDetail(state) {
   const total = lessons.reduce((s, l) => s + (l.durationSec || 0), 0);
   const days = policy && courseDays(course, policy);
   const facts = [
-    course.priceLabel ? [t("수강료", "cd.price"), esc(course.priceLabel)] : null,
+    course.priceLabel ? [t("수강료", "cd.price"), esc(fmtPrice(course.priceLabel))] : null,
     lessons.length ? [t("구성", "cd.parts"), tv("{n}강 · 총 {d}", "cd.partsVal", { n: lessons.length, d: fmtDur(total) })] : null,
     days ? [t("수강 기간", "cd.period"), tv("{d}일 · 1회 무료 연장 +{e}일", "cd.periodVal", { d: days, e: policy.extendDays })] : null,
   ].filter(Boolean);
@@ -63,7 +63,7 @@ function renderDetail(state) {
 
   app.innerHTML = `<article class="detail">
     <div class="d-top">
-      <div class="d-thumb" style="background-image:url('${esc(course.thumb || DEFAULT_THUMB)}')"></div>
+      <div class="d-thumb" style="background-image:url('${esc(thumbOf(course, cid))}')"></div>
       <div class="d-info">
         <span class="eyebrow">Online Class</span>
         <h1>${esc(course.title)}</h1>
@@ -89,7 +89,7 @@ function renderDetail(state) {
   }
   if (state === "verify") { act.innerHTML = verifyGateHtml(me.user); bindVerifyGate(act, me.user); return; }
   const msg = {
-    none: t("입금을 확인하면 수강권을 드립니다. 아래 문의 버튼으로 신청해 주세요.", "cd.none"),
+    none: t("입금을 확인하면 수강권을 드립니다. 카카오톡으로 신청해 주세요.", "cd.none"),
     expired: tv("수강 기간이 끝났습니다. (종료일 {d})", "cd.expired", { d: fmtDate(enr?.endAt) }),
     upcoming: tv("수강 시작일은 {d} 입니다.", "cd.upcoming", { d: fmtDate(enr?.startAt) }),
     revoked: t("수강권이 없습니다. 문의해 주세요.", "cd.revoked"),

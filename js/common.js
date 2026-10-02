@@ -9,7 +9,7 @@ import {
   auth, db, IS_EMU, CONFIGURED, doc, getDoc, setDoc, updateDoc, serverTimestamp,
   GoogleAuthProvider, signInWithPopup, signInWithCredential, onAuthStateChanged, signOut,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification,
-  sendPasswordResetEmail, updateProfile,
+  sendPasswordResetEmail, updateProfile, courseThumbUrl,
 } from "./firebase.js";
 import { t, tv, getLang, setLang, applyLang, onLangChange } from "./i18n.js";
 
@@ -26,7 +26,12 @@ export const BIZ = {
   phone: PHONE,
   email: "bellaon_art@naver.com",
 };
-export const DEFAULT_THUMB = "/images/class/paper-flower.jpg";      // 강좌 썸네일이 비었을 때
+// 강좌 썸네일 — 관리자가 따로 넣은 그림이 있으면 그것, 비었거나 유튜브 썸네일 주소면
+// 서버 함수가 대신 가져다주는 1차시 유튜브 썸네일(영상 ID 를 화면에 드러내지 않음). 못 가져오면 서버가 기본 그림으로 넘김.
+export const thumbOf = (course, cid) => {
+  const t = course?.thumb || "";
+  return !t || /ytimg\.com|youtube\.com|youtu\.be/.test(t) ? courseThumbUrl(cid) : t;
+};
 
 // HTML 에 넣는 글자는 반드시 이걸 거친다(회원 이름 등으로 화면이 깨지거나 악용되는 것 방지)
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -75,7 +80,7 @@ function renderHeader() {
   hd.className = "site-hd" + (act === "home" ? "" : " solid");
   const lang = getLang();
   hd.innerHTML = `
-  <div class="wrap nav">
+  <div class="nav">
     <a href="/" class="brand" aria-label="BELLAON ART"><img src="/images/logo.png" alt="BELLAON Art Flower Studio"></a>
     <nav class="menu" id="menu" aria-label="${t("주 메뉴", "aria.menu")}">
       <div class="menu-main">${MENU.map(([k, href, label]) => `<a href="${href}" class="${k === act ? "on" : ""}">${label}</a>`).join("")}</div>
@@ -328,7 +333,7 @@ export function login(startMode = "in") {
     if (a === "reset") {
       const email = f.email.value.trim();
       if (!email) { err.textContent = t("가입한 이메일을 먼저 입력해 주세요.", "auth.resetNeedEmail"); f.email.focus(); return; }
-      try { busy(true); await sendPasswordResetEmail(auth, email); err.textContent = ""; toast(t("비밀번호 재설정 메일을 보냈습니다. 메일함(스팸함 포함)을 확인해 주세요.", "auth.resetSent"), 5000); }
+      try { busy(true); await sendPasswordResetEmail(auth, email, resetReturn()); err.textContent = ""; toast(t("비밀번호 재설정 메일을 보냈습니다. 메일함(스팸함 포함)을 확인해 주세요.", "auth.resetSent"), 5000); }
       catch (x) { err.textContent = authMsg(x); }
       finally { busy(false); }
     }
@@ -349,7 +354,7 @@ export function login(startMode = "in") {
         await updateProfile(cred.user, { displayName: name });
         await upsertUser(cred.user);            // 이름을 회원 정보에 반영
         ss.set("seen:" + cred.user.uid, "1");
-        await sendEmailVerification(cred.user);
+        await sendEmailVerification(cred.user, verifyReturn());
         close();
         dialog({ title: t("인증 메일을 보냈습니다", "auth.sentTitle"),
           body: tv("<b>{email}</b> 로 보낸 메일의 링크를 눌러 인증을 마쳐 주세요.<br><span class='small muted'>메일이 안 보이면 스팸함도 확인해 주세요. 인증 후 강의를 볼 수 있습니다.</span>", "auth.sentBody", { email: esc(email) }),
@@ -365,6 +370,13 @@ export function login(startMode = "in") {
   (startMode === "up" ? f.name : f.email).focus();
 }
 export const logout = () => signOut(auth);
+
+// ---------- 메일 링크의 "돌아올 주소" ----------
+// 인증·재설정 메일 링크 → Firebase 안내 페이지 → [계속] 버튼이 이 주소로 돌아온다(콘솔 설정 없이 동작).
+// ※ 콘솔 '작업 URL 맞춤설정'(= /auth/action.html)이 저장되면 그 페이지가 직접 처리하고 같은 곳으로 보낸다.
+//   (10-03 콘솔 저장이 계속 오류 → 이 방식으로 운영 · docs/04 §3-0)
+const verifyReturn = () => ({ url: `${location.origin}/mypage.html?verified=1` });
+const resetReturn = () => ({ url: `${location.origin}/mypage.html` });
 
 // ---------- 이메일 인증 (이메일 가입 회원은 인증 전 강의 시청 불가 — 보안 규칙도 같은 조건) ----------
 export const needsVerify = (user) => !!user && !user.emailVerified;
@@ -383,7 +395,7 @@ export function bindVerifyGate(container, user) {
       if (auth.currentUser.emailVerified) { await auth.currentUser.getIdToken(true); location.reload(); }
       else toast("아직 인증이 확인되지 않았습니다. 메일의 링크를 눌러 주세요.");
     } else if (v === "resend") {
-      try { await sendEmailVerification(user); toast("인증 메일을 다시 보냈습니다."); }
+      try { await sendEmailVerification(user, verifyReturn()); toast("인증 메일을 다시 보냈습니다."); }
       catch (x) { toast(authMsg(x)); }
     }
   };

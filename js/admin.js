@@ -15,6 +15,7 @@ import {
   kstDateStr, startOfKstDay, endOfKstDay, defaultEndStr, courseDays, CODE_RE, normCode,
 } from "./core.js";
 import { parseYouTubeId, probeVideo } from "./youtube.js";
+import { CATEGORIES } from "./course-list.js";   // 카테고리 3개는 이 한 곳에 고정
 
 initShell({ active: "admin", kakao: false });
 const root = $("#admin");
@@ -125,7 +126,7 @@ function renderCourses() {
       <div class="toolbar"><b>강좌 ${S.courses.length}개</b><button type="button" class="btn solid sm" id="newC">+ 새 강좌</button></div>
       <p class="hint" style="margin-bottom:10px">↑↓ 순서 = Workshop 페이지에 보이는 순서(공개 강좌만 표시)</p>
       <ul class="pick-list">${S.courses.map((c, i) => `<li><button type="button" data-c="${esc(c.id)}" class="${S.selCourse === c.id ? "on" : ""}">
-        <span>${esc(c.title)}<br><span class="hint">${c.lessonCount || 0}강 · ${fmtDur(c.totalSec)}</span></span>
+        <span>${esc(c.title)}<br><span class="hint">${c.lessonCount || 0}강 · ${fmtDur(c.totalSec)}${(c.categories || []).length ? " · " + c.categories.map((k) => esc(CATEGORIES.find((x) => x.id === k)?.title || k)).join(", ") : " · 카테고리 없음"}</span></span>
         <span class="badge ${c.published ? "active" : ""}">${c.published ? "공개" : "비공개"}</span></button>
         <span class="pick-ops"><button type="button" data-mv="-1" data-i="${i}" title="위로" ${i === 0 ? "disabled" : ""}>↑</button><button type="button" data-mv="1" data-i="${i}" title="아래로" ${i === S.courses.length - 1 ? "disabled" : ""}>↓</button></span></li>`).join("")
       || `<li class="hint">아직 강좌가 없습니다.</li>`}</ul>
@@ -158,8 +159,11 @@ async function renderCourseEditor() {
         <label class="field">표시 가격<input name="priceLabel" value="${esc(c.priceLabel)}" placeholder="예: 150,000원"></label>
         <label class="field">기본 수강기간(일)<input name="defaultDays" type="number" min="1" value="${esc(c.defaultDays ?? S.policy.defaultDays)}"></label>
       </div>
-      <label class="field">썸네일 이미지 주소<input name="thumb" value="${esc(c.thumb)}" placeholder="비우면 기본 이미지">
-        <span class="hint">${isNew ? "저장 후 차시를 추가하면 첫 차시 썸네일을 쓸 수 있습니다." : `<button type="button" class="btn sm" id="ytThumb">첫 차시 유튜브 썸네일 쓰기</button>`}</span></label>
+      <div class="field">카테고리 (여러 개 고를 수 있음)
+        <div class="cat-checks">${CATEGORIES.map((k) => `<label class="check"><input type="checkbox" name="cat" value="${k.id}" ${(c.categories || []).includes(k.id) ? "checked" : ""}> ${esc(k.title)}</label>`).join("")}</div>
+        <span class="hint">고른 카테고리의 강의 목록에 나옵니다. 메인·Workshop 카테고리 카드는 공개 강좌가 하나라도 있으면 목록으로, 없으면 '준비 중'으로 연결됩니다.</span></div>
+      <label class="field">썸네일 이미지 주소 (선택)<input name="thumb" value="${esc(/ytimg\.com/.test(c.thumb || "") ? "" : c.thumb)}" placeholder="비우면 1차시 유튜브 썸네일 자동">
+        <span class="hint">비워 두면 강의 목록·강좌 상세·마이페이지에 <b>1차시 유튜브 썸네일</b>이 자동으로 나옵니다(영상 주소는 방문자에게 보이지 않음). 다른 그림을 쓰려면 이미지 주소를 넣으세요.</span></label>
       <label class="check"><input type="checkbox" name="published" ${c.published ? "checked" : ""}> 공개 (Workshop 페이지에 보임)</label>
       <div><button type="submit" class="btn solid">${isNew ? "강좌 만들기" : "저장"}</button></div>
     </form>
@@ -170,11 +174,6 @@ async function renderCourseEditor() {
   if (!isNew) {
     S.lessons = await loadLessons(c.id);
     renderLessons();
-    $("#ytThumb").onclick = () => {
-      if (!S.lessons[0]) return toast("먼저 차시를 추가하세요.");
-      $("#cForm").thumb.value = `https://i.ytimg.com/vi/${S.lessons[0].youtubeId}/hqdefault.jpg`;
-      toast("썸네일 주소를 넣었습니다. [저장]을 눌러야 반영됩니다.");
-    };
   }
 }
 
@@ -185,8 +184,12 @@ async function saveCourse(isNew) {
     title: f.title.value.trim(), summary: f.summary.value.trim(), description: f.description.value.trim(),
     priceLabel: f.priceLabel.value.trim(), thumb: f.thumb.value.trim(),
     defaultDays: parseInt(f.defaultDays.value, 10),
+    categories: [...f.querySelectorAll("[name=cat]:checked")].map((x) => x.value),
     published: f.published.checked, updatedAt: serverTimestamp(),
   };
+  if (data.published && !data.categories.length) return toast("공개하려면 카테고리를 하나 이상 골라 주세요(목록에 나올 곳).");
+  // 유튜브 썸네일 주소에는 영상 ID 가 들어 있다 → 저장하지 않고 자동(서버가 대신 가져옴)으로
+  if (/ytimg\.com|youtube\.com|youtu\.be/.test(data.thumb)) { data.thumb = ""; toast("유튜브 썸네일은 자동으로 나오므로 주소를 비웠습니다(영상 주소 보호)."); }
   if (!ID_RE.test(id)) return toast("강좌 ID는 영문 소문자·숫자·하이픈 2~40자로 정해 주세요.");
   if (!data.title) return toast("강좌 제목을 입력해 주세요.");
   if (!(data.defaultDays >= 1)) return toast("기본 수강기간은 1일 이상이어야 합니다.");
