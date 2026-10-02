@@ -1,0 +1,152 @@
+/* =========================================================
+   벨라온 온라인 클래스·관리자 페이지 공통 스타일
+   - 색·글꼴은 css/base.css 의 값만 쓴다(여기서 색 코드를 새로 정의하지 말 것)
+   ========================================================= */
+html{scroll-behavior:smooth}
+/* 숫자는 일반(lining) 모양으로 — Cormorant 기본 숫자는 옛날식이라 0%가 o%, 1이 ɪ처럼 보임(수강률 오독 방지) */
+body{line-height:1.7;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;font-variant-numeric:lining-nums}
+main{flex:1}
+button{font:inherit;color:inherit;cursor:pointer}
+/* 상단 메뉴·하단·확인창·로그인 창·알림 모양은 css/shell.css (모든 페이지 공통) */
+
+/* ---------- 공통 요소 ---------- */
+.page{padding:clamp(36px,6vw,72px) 0 clamp(60px,8vw,110px)}
+.page-head{margin-bottom:clamp(24px,4vw,40px)}
+.eyebrow{font-family:var(--caps);font-size:.76rem;letter-spacing:.12em;color:var(--sage-deep);font-weight:500}   /* 단어 첫 글자만 대문자 (site.css 와 같은 규칙) */
+.page-head h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.6rem,3.4vw,2.3rem);line-height:1.3;margin-top:10px;letter-spacing:-.01em}
+.page-head p{color:var(--muted);margin-top:8px;font-size:.92rem}
+.rule{display:block;width:36px;height:2px;background:var(--pink-deep);margin-top:18px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:.84rem;letter-spacing:.03em;padding:11px 22px;border-radius:999px;border:1px solid var(--line);background:transparent;transition:.2s;white-space:nowrap}
+.btn:hover{border-color:var(--pink-deep);color:var(--pink-deep)}
+.btn.solid{background:var(--ink);border-color:var(--ink);color:var(--canvas)}
+.btn.solid:hover{background:var(--sage-deep);border-color:var(--sage-deep);color:#fff}
+.btn.sage{background:var(--sage-deep);border-color:var(--sage-deep);color:#fff}
+.btn.sm{padding:6px 14px;font-size:.78rem}
+.btn:disabled{opacity:.45;pointer-events:none}
+
+.card-box{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:clamp(18px,3vw,28px)}
+.empty{text-align:center;color:var(--muted);padding:48px 16px;line-height:2}
+.empty a{color:var(--sage-deep);text-decoration:underline}
+.muted{color:var(--muted)}
+.small{font-size:.8rem}
+
+/* 수강률 막대 */
+.bar{height:6px;border-radius:999px;background:var(--line);overflow:hidden}
+.bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sage),var(--sage-deep));border-radius:inherit;transition:width .4s}
+.bar.done > i{background:linear-gradient(90deg,var(--pink),var(--pink-deep))}
+
+.badge{display:inline-block;font-size:.7rem;letter-spacing:.04em;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.badge.active{border-color:var(--sage);color:var(--sage-deep);background:rgba(157,170,139,.12)}
+.badge.done{border-color:var(--pink-deep);color:var(--pink-deep);background:rgba(243,184,191,.15)}
+.badge.warn{border-color:var(--pink-deep);color:#fff;background:var(--pink-deep)}
+
+/* ---------- 강좌 목록 ---------- */
+.course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:clamp(18px,3vw,30px)}
+.course-card{display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s}
+.course-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.course-card .thumb{aspect-ratio:16/10;background:var(--line) center/cover no-repeat}
+.course-card .body{padding:18px 20px 22px;display:flex;flex-direction:column;gap:6px;flex:1}
+.course-card h3{font-family:var(--serif);font-weight:500;font-size:1.3rem;line-height:1.3}
+.course-card .meta{font-size:.78rem;color:var(--muted)}
+.course-card .sum{font-size:.88rem;color:var(--ink-soft)}
+.course-card .foot{margin-top:auto;padding-top:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.course-card .price{font-size:.88rem;color:var(--ink)}
+
+/* ---------- 내 강의실 ---------- */
+.my-list{display:flex;flex-direction:column;gap:16px}
+.my-item{display:grid;grid-template-columns:160px 1fr auto;gap:20px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px}
+.my-item .thumb{aspect-ratio:16/10;border-radius:8px;background:var(--line) center/cover no-repeat}
+.my-item h3{font-family:var(--serif);font-weight:500;font-size:1.2rem;line-height:1.3}
+.my-item .line{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:.8rem;color:var(--muted);margin-top:6px}
+.my-item .bar{margin-top:10px}
+.my-item .acts{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+@media (max-width:680px){
+  .my-item{grid-template-columns:1fr;gap:12px}
+  .my-item .acts{flex-direction:row;flex-wrap:wrap}
+  .my-item .acts .btn{flex:1}
+}
+
+/* ---------- 강의실(시청) ---------- */
+.watch{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:clamp(18px,3vw,32px);align-items:start}
+.player-box{position:relative;aspect-ratio:16/9;background:#2b2824;border-radius:10px;overflow:hidden}
+.player-box iframe,.player-box > div{position:absolute;inset:0;width:100%;height:100%;border:0}
+.now h2{font-family:var(--serif);font-weight:500;font-size:clamp(1.25rem,2.4vw,1.6rem);margin-top:16px;line-height:1.35}
+.now .line{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:.8rem;color:var(--muted);margin-top:6px}
+.now .bar{margin-top:10px}
+.notice{margin-top:14px;font-size:.78rem;color:var(--muted);background:var(--paper);border:1px dashed var(--line);border-radius:8px;padding:10px 14px}
+.side{position:sticky;top:96px}
+.side .sum{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.side .sum b{font-family:var(--serif);font-size:1.8rem;font-weight:500}
+.side .bar{margin:8px 0 6px}
+.lessons{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:4px;max-height:calc(100vh - 300px);overflow-y:auto}
+.lessons li button{width:100%;display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;text-align:left;background:transparent;border:1px solid transparent;border-radius:8px;padding:10px 10px}
+.lessons li button:hover{background:rgba(255,255,255,.6)}
+.lessons li.on button{background:#fff;border-color:var(--line)}
+.lessons .no{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:.72rem;border:1px solid var(--line);color:var(--muted)}
+.lessons li.done .no{background:var(--pink-deep);border-color:var(--pink-deep);color:#fff}
+.lessons .t{font-size:.86rem;line-height:1.4}
+.lessons .t small{display:block;color:var(--muted);font-size:.72rem}
+.lessons .p{font-size:.74rem;color:var(--muted)}
+@media (max-width:900px){
+  .watch{grid-template-columns:1fr}
+  .side{position:static}
+  .lessons{max-height:none}
+}
+
+/* 수강권 없음·로그인 필요 안내 */
+.gate{max-width:640px;margin:0 auto;text-align:center}
+.gate .thumb{aspect-ratio:16/9;border-radius:10px;background:var(--line) center/cover no-repeat;margin-bottom:22px}
+.gate h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.5rem,3vw,2rem)}
+.gate .desc{color:var(--ink-soft);margin-top:12px;white-space:pre-line;font-size:.92rem}
+.gate .state{margin-top:22px;color:var(--muted);font-size:.88rem}
+.gate .btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+
+/* ---------- 관리자 ---------- */
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto}
+.tabs button{border:0;background:transparent;padding:10px 16px;font-size:.88rem;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--pink-deep)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+table.tbl{width:100%;border-collapse:collapse;font-size:.84rem}
+.tbl th,.tbl td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;white-space:nowrap}
+.tbl th{font-weight:500;color:var(--muted);font-size:.76rem;background:rgba(230,220,210,.35)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tr.click{cursor:pointer}
+.tbl tr.click:hover td{background:rgba(255,255,255,.7)}
+.tbl .bar{width:110px;display:inline-block;vertical-align:middle;margin-right:8px}
+
+.form{display:grid;gap:14px}
+.form .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:.8rem;color:var(--muted)}
+.field input,.field textarea,.field select{font:inherit;font-size:.9rem;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 12px;width:100%}
+.field input:focus,.field textarea:focus,.field select:focus{outline:2px solid var(--sage);outline-offset:-1px;border-color:var(--sage)}
+.field textarea{min-height:90px;resize:vertical}
+.check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--ink)}
+.hint{font-size:.74rem;color:var(--muted)}
+.split{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:900px){ .split{grid-template-columns:1fr} }
+.pick-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.pick-list button{width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:.86rem;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.pick-list button.on{border-color:var(--sage-deep);background:#fff}
+.pick-list li{display:flex;gap:6px;align-items:stretch}
+.pick-list li > button[data-c]{flex:1;min-width:0}
+.pick-ops{display:flex;flex-direction:column;gap:4px}
+.pick-list .pick-ops button{width:30px;flex:1;padding:0;justify-content:center;font-size:.8rem}
+.pick-list .pick-ops button:disabled{opacity:.35;cursor:default}
+.lesson-rows{list-style:none;display:flex;flex-direction:column;gap:8px}
+.lesson-rows li{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.86rem}
+.lesson-rows .ops{display:flex;gap:4px}
+.lesson-rows .ops button{border:1px solid var(--line);background:transparent;border-radius:6px;width:30px;height:30px;font-size:.8rem}
+.lesson-rows .ops button:hover{border-color:var(--pink-deep);color:var(--pink-deep)}
+.policy{font-size:.8rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 16px}
+.policy b{color:var(--ink);font-weight:500}
+.alert{background:rgba(243,184,191,.18);border:1px solid var(--pink);border-radius:10px;padding:14px 16px;font-size:.86rem;margin-bottom:18px}
+
+/* ---------- 마이페이지 · 개인정보 수정 ---------- */
+.profile{max-width:560px}
+.profile h4{font-weight:500;font-size:.95rem;margin:4px 0 12px}
+.profile .card-box + .card-box{margin-top:18px}
+.profile .danger{border-color:rgba(227,155,163,.6)}
+.btn.danger{border-color:var(--pink-deep);color:var(--pink-deep)}
+.btn.danger:hover{background:var(--pink-deep);color:#fff}

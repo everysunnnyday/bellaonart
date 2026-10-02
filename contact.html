@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact | 벨라온 아트플라워 스튜디오 · 문의</title>
+<meta name="description" content="벨라온아트 문의 — 공간 연출·제작 의뢰, 클래스, 출강 문의. 010-7302-5170 · bellaon_art@naver.com · 광양시 눈소9길 53-1 2호">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.bellaonart.com/contact.html">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+<script>document.documentElement.classList.add('js');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/css/base.css?v=1">
+<link rel="stylesheet" href="/css/shell.css?v=1">
+<link rel="stylesheet" href="/css/site.css?v=1">
+</head>
+<body>
+<header id="site-header"></header>
+
+<main>
+<!-- 연락처 + 문의 폼 (내용은 js/contact-section.js 한 곳 — 메인과 공용) -->
+<div id="contact-section"></div>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script type="module">
+  import { initShell, initReveal } from "/js/common.js";
+  import { renderContact } from "/js/contact-section.js";
+  initShell({ active: "contact" });
+  renderContact(document.getElementById("contact-section"), { asPage: true });
+  initReveal();
+</script>
+</body>
+</html>

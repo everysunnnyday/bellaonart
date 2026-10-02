@@ -1,0 +1,42 @@
+/* =========================================================
+   BELLAON ART — 공통 디자인 값 (색·글꼴의 단일 기준)
+   - 모든 페이지(index·about·class·admin)가 이 파일을 가장 먼저 불러온다.
+   - 색·글꼴을 바꿀 때는 여기만 고친다. 페이지별로 다른 값(폭·줄간격 등)은 각 페이지에서 덮어쓴다.
+   - 국문: Noto Sans KR · 영문: Cormorant Garamond(세리프 — 제목·메뉴·소제목·로고 글씨 모두)
+   ========================================================= */
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Noto+Sans+KR:wght@300;400;500;700&display=swap");
+
+:root{
+  --canvas:#F2EEEB;        /* 아이보리(메인 배경) */
+  --paper:#FBF8F5;         /* 섹션 카드용 밝은 아이보리 */
+  --ink:#4A423B;           /* 본문 브라운(채도 낮춘 토프브라운 · 눈편함) */
+  --ink-soft:#5E554D;      /* 살짝 밝은 브라운 */
+  --muted:#9C8B7D;         /* 보조 텍스트(뮤트 브라운) */
+  --stone:#C4B6A8;         /* 아주 연한 브라운/스톤 */
+  --sage:#9DAA8B;          /* 세이지 그린 */
+  --sage-deep:#7C8A68;     /* 진한 세이지(라인·포인트) */
+  --pink:#F3B8BF;          /* 인디핑크(명함 로고색) */
+  --pink-deep:#E39BA3;     /* 진한 핑크(호버·포인트) */
+  --line:#E6DCD2;          /* 구분선(웜 아이보리) */
+  --shadow:0 1px 2px rgba(74,58,48,.05),0 14px 38px -20px rgba(74,58,48,.22);
+
+  --serif:"Cormorant Garamond",serif;
+  --caps:"Cormorant Garamond",serif;   /* 메뉴·소제목·로고 글씨 — 대소문자 구분 세리프 (아리따 부리 → 2026-10-03 써니님 요청으로 교체) */
+  --sans:"Noto Sans KR","Pretendard",-apple-system,sans-serif;
+
+  --maxw:1240px;           /* 기본 콘텐츠 폭(소개 페이지는 1080px 로 덮어씀) */
+  --gutter:clamp(20px,5vw,72px);
+  --sec-y:clamp(56px,8vw,120px);
+  --header-h:92px;         /* 헤더 높이 */
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:var(--sans);
+  background:var(--canvas);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}

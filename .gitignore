@@ -1,5 +1,14 @@
 # 내부 작업용 문서(사이트에 배포 안 함)
 이미지_규격_안내.md
+docs/
+qa/
+
+# Firebase 개발 도구 부산물 (설치 부품·에뮬레이터 데이터·로그·자동 복사본) — 배포 제외
+node_modules/
+firebase/.emu-data/
+firebase/*.log
+firebase/functions/core.js
+
 # OS/에디터 임시파일
 .DS_Store
 Thumbs.db

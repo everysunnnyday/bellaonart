@@ -1,0 +1,110 @@
+/* =========================================================
+   BELLAON ART — 공통 껍데기 (모든 페이지)
+   상단 메뉴 · 휴대폰 메뉴 · 로그인/언어 · 하단 · 카톡 버튼 · 확인창 · 로그인 창 · 알림
+   - 그리는 코드는 js/common.js 한 곳(initShell). 여기는 모양만.
+   - 색·글꼴은 css/base.css 값만 쓴다.
+   ========================================================= */
+[hidden]{display:none !important}
+
+/* ---------- 상단 메뉴 ---------- */
+.site-hd{position:sticky;top:0;z-index:60;background:rgba(242,238,235,.86);backdrop-filter:saturate(140%) blur(14px);-webkit-backdrop-filter:saturate(140%) blur(14px);border-bottom:1px solid transparent;transition:border-color .3s}
+.site-hd.scrolled,.site-hd.solid{border-color:var(--line)}
+.site-hd .nav{display:flex;align-items:center;justify-content:space-between;gap:20px;height:var(--header-h)}
+.site-hd .brand{display:flex;align-items:center;position:relative;z-index:75}
+.site-hd .brand img{height:50px;width:auto}
+.site-hd .menu{display:flex;align-items:center;gap:clamp(18px,2.6vw,40px)}
+.menu-main{display:flex;align-items:center;gap:clamp(16px,2.2vw,34px)}
+.menu-main a{position:relative;font-family:var(--caps);font-weight:500;font-size:.82rem;letter-spacing:.08em;color:var(--ink);opacity:.78;transition:opacity .2s;white-space:nowrap}
+.menu-main a:hover,.menu-main a.on{opacity:1}
+.menu-main a::after{content:"";position:absolute;left:0;bottom:-6px;width:0;height:1px;background:var(--pink-deep);transition:width .25s}
+.menu-main a:hover::after,.menu-main a.on::after{width:100%}
+.menu-side{display:flex;align-items:center;gap:14px;font-family:var(--sans);font-size:.76rem;color:var(--ink-soft)}
+.menu-side::before{content:"";width:1px;height:14px;background:var(--stone)}
+.hd-auth{display:flex;align-items:center;gap:12px}
+.hd-auth a,.hd-auth button{background:none;border:0;padding:2px 0;font:inherit;color:inherit;cursor:pointer;white-space:nowrap;transition:color .2s}
+.hd-auth a:hover,.hd-auth button:hover,.hd-auth a.on{color:var(--pink-deep)}
+.lang{display:flex;align-items:center;gap:4px;color:var(--stone)}
+.lang button{background:none;border:0;padding:2px 2px;font:inherit;font-size:.72rem;letter-spacing:.06em;color:var(--muted);cursor:pointer}
+.lang button.on{color:var(--ink);font-weight:700}
+.burger{display:none;flex-direction:column;gap:5px;background:none;border:0;cursor:pointer;padding:8px;position:relative;z-index:75}
+.burger span{width:24px;height:1.5px;background:var(--ink);transition:.3s}
+.burger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.burger.open span:nth-child(2){opacity:0}
+.burger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+
+.inapp-bar{background:var(--pink);color:var(--ink);font-size:.8rem;text-align:center;padding:8px 16px}
+.inapp-bar button{margin-left:6px;border:0;background:var(--ink);color:var(--canvas);border-radius:999px;padding:3px 12px;font-size:.76rem;cursor:pointer}
+
+/* 휴대폰·좁은 화면: 전체 화면 메뉴 */
+@media (max-width:980px){
+  .site-hd{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(242,238,235,.95)}   /* 흐림 효과가 고정 메뉴를 헤더 안에 가두는 문제 방지 */
+  .burger{display:flex}
+  .site-hd .menu{position:fixed;inset:0;z-index:70;flex-direction:column;justify-content:center;gap:34px;background:var(--canvas);padding:0 40px;transform:translateX(100%);transition:transform .38s cubic-bezier(.16,1,.3,1)}
+  .site-hd .menu.open{transform:none}
+  .menu-main{flex-direction:column;gap:24px}
+  .menu-main a{font-size:1.05rem;letter-spacing:.14em;opacity:1}
+  .menu-side{flex-direction:column;gap:18px;font-size:.92rem}
+  .menu-side::before{width:40px;height:1px}
+  .hd-auth{gap:22px}
+  .lang button{font-size:.86rem}
+}
+@media (max-width:640px){
+  :root{--header-h:72px}
+  .site-hd .brand img{height:40px}
+}
+
+/* ---------- 하단 ---------- */
+.site-ft{border-top:1px solid var(--line);padding:30px 0;text-align:center;background:var(--canvas)}
+.site-ft .logo{font-family:var(--caps);letter-spacing:.2em;font-size:1rem;display:block;margin-bottom:12px;color:var(--ink)}
+.site-ft .biz{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px;font-family:var(--sans);font-size:.72rem;line-height:1.8;color:var(--muted);word-break:keep-all}
+.site-ft .biz b{font-weight:500;color:var(--ink-soft);margin-right:2px}
+.site-ft small{display:block;margin-top:12px;color:var(--muted);font-size:.72rem}
+
+/* ---------- 카톡 상담 버튼 ---------- */
+.kakao-float{position:fixed;right:22px;bottom:22px;z-index:80;display:inline-flex;align-items:center;gap:9px;background:#FEE500;color:#3C1E1E;padding:13px 18px 13px 15px;border-radius:999px;font-family:var(--sans);font-weight:700;font-size:.9rem;box-shadow:0 8px 24px -8px rgba(60,30,30,.45);transition:transform .2s,box-shadow .2s}
+.kakao-float:hover{transform:translateY(-3px);box-shadow:0 14px 30px -10px rgba(60,30,30,.5)}
+.kakao-float svg{width:22px;height:22px;flex:none}
+.kakao-float .kf-label{white-space:nowrap}
+@media (max-width:640px){
+  .kakao-float .kf-label{display:none}
+  .kakao-float{padding:14px;right:16px;bottom:16px}
+}
+
+/* ---------- 확인창 · 로그인 창 (모든 페이지에서 같은 모양) ---------- */
+.dlg-wrap{position:fixed;inset:0;z-index:300;background:rgba(43,40,36,.45);display:grid;place-items:center;padding:16px}
+.dlg{position:relative;background:var(--paper);border-radius:14px;padding:26px 24px 20px;max-width:420px;width:100%;box-shadow:0 30px 80px -30px rgba(0,0,0,.5);font-family:var(--sans);color:var(--ink);line-height:1.6}
+.dlg h3{font-family:var(--serif);font-weight:500;font-size:1.3rem}
+.dlg-body{margin-top:10px;font-size:.9rem;color:var(--ink-soft);line-height:1.8}
+.dlg-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.dlg-x{position:absolute;top:10px;right:12px;width:34px;height:34px;border:0;background:transparent;font-size:1.5rem;line-height:1;color:var(--muted);cursor:pointer}
+.dlg-x:hover{color:var(--ink)}
+.dlg .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-size:.84rem;padding:11px 22px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;transition:.2s}
+.dlg .btn:hover{border-color:var(--pink-deep);color:var(--pink-deep)}
+.dlg .btn.solid{background:var(--ink);border-color:var(--ink);color:var(--canvas)}
+.dlg .btn.solid:hover{background:var(--sage-deep);border-color:var(--sage-deep);color:#fff}
+.dlg .btn:disabled{opacity:.45;pointer-events:none}
+.dlg .small{font-size:.8rem}
+.dlg .muted{color:var(--muted)}
+
+.auth-dlg{display:flex;flex-direction:column;gap:14px}
+.auth-dlg h3{text-align:center;margin-bottom:4px}
+.auth-dlg .btn.google{width:100%;background:#fff;padding:12px}
+.auth-dlg .btn.google .g{font-family:Arial,sans-serif;font-weight:700;color:#4285F4}
+.auth-dlg .or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.74rem}
+.auth-dlg .or::before,.auth-dlg .or::after{content:"";flex:1;height:1px;background:var(--line)}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:999px;padding:3px}
+.auth-tabs button{border:0;background:transparent;border-radius:999px;padding:7px;font:inherit;font-size:.84rem;color:var(--muted);cursor:pointer}
+.auth-tabs button.on{background:var(--ink);color:var(--canvas)}
+.auth-dlg form{display:grid;gap:12px}
+.auth-dlg .field{display:flex;flex-direction:column;gap:6px;font-size:.8rem;color:var(--muted)}
+.auth-dlg .field input{font:inherit;font-size:.9rem;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 12px;width:100%}
+.auth-dlg .field input:focus{outline:2px solid var(--sage);outline-offset:-1px;border-color:var(--sage)}
+.auth-dlg .hint{font-size:.74rem;color:var(--muted)}
+.auth-dlg .btn.solid{width:100%;padding:12px}
+.auth-err{color:var(--pink-deep);font-size:.8rem;min-height:1em}
+.auth-err:empty{display:none}
+.auth-dlg .link{border:0;background:transparent;color:var(--muted);font:inherit;font-size:.78rem;text-decoration:underline;justify-self:center;cursor:pointer}
+
+/* ---------- 알림 ---------- */
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:400;background:var(--ink);color:var(--canvas);font-family:var(--sans);font-size:.84rem;padding:11px 20px;border-radius:999px;max-width:calc(100vw - 32px);text-align:center;transition:.3s}
+#toast.show{opacity:1;transform:translate(-50%,0)}

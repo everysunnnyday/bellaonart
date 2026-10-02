@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Art &amp; Design | 벨라온 아트플라워 스튜디오 · 공간 연출</title>
+<meta name="description" content="벨라온아트의 플로럴 아트 & 공간 연출 — 공간 분석부터 컨셉, 디자인·제작, 설치까지. 자이언트 플라워·페이퍼 플라워 설치 프로젝트.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.bellaonart.com/art-design.html">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="Art & Design | 벨라온 아트플라워 스튜디오">
+<meta property="og:description" content="플로럴 아트 & 공간 연출 프로젝트">
+<meta property="og:image" content="https://www.bellaonart.com/images/portfolio/work-01.png">
+<meta property="og:url" content="https://www.bellaonart.com/art-design.html">
+<meta property="og:site_name" content="BELLAON 벨라온 아트플라워">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+<script>document.documentElement.classList.add('js');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/css/base.css?v=1">
+<link rel="stylesheet" href="/css/shell.css?v=1">
+<link rel="stylesheet" href="/css/site.css?v=1">
+</head>
+<body>
+<header id="site-header"></header>
+
+<main>
+<!-- 디자인 프로세스 + 프로젝트 (내용은 js/art-sections.js 한 곳 — 메인과 공용) -->
+<div id="art-sections"></div>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script type="module">
+  import { initShell, initReveal } from "/js/common.js";
+  import { renderArtSections } from "/js/art-sections.js";
+  initShell({ active: "art" });
+  renderArtSections(document.getElementById("art-sections"), { asPage: true });
+  initReveal();
+</script>
+</body>
+</html>

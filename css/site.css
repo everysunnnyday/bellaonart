@@ -1,0 +1,151 @@
+/* =========================================================
+   BELLAON ART — 공개 페이지 디자인 (메인·About·Art&Design·Workshop·Shop·Contact)
+   - 예전 index.html 안에 있던 스타일을 옮겨 온 것(모양 유지).
+   - 색·글꼴 = css/base.css · 상단/하단/카톡/로그인 창 = css/shell.css
+   ========================================================= */
+html{scroll-behavior:smooth;scroll-padding-top:var(--header-h)}
+body{line-height:1.6;overflow-x:hidden;font-variant-numeric:lining-nums}
+
+/* ---------- 타이포 ---------- */
+/* 소제목: 단어 첫 글자만 대문자(입력한 그대로) — 예전엔 대문자 강제(uppercase)+넓은 자간 (2026-10-03 써니님) */
+.eyebrow{font-family:var(--caps);font-size:.78rem;letter-spacing:.12em;color:var(--sage-deep);font-weight:500}
+.section-title{font-family:var(--serif);font-weight:500;font-size:clamp(1.2rem,2vw,1.55rem);line-height:1.35;color:var(--ink)}
+
+/* ---------- 스크롤 진입 애니메이션 ---------- */
+.js .reveal{opacity:0;transform:translateY(26px);transition:opacity 2.4s cubic-bezier(.16,1,.3,1),transform 2.4s cubic-bezier(.16,1,.3,1)}
+.reveal.in{opacity:1;transform:none}
+
+/* ---------- 버튼 ---------- */
+.btn{display:inline-flex;align-items:center;gap:10px;font-size:.82rem;letter-spacing:.06em;padding:14px 26px;border-radius:999px;transition:.25s;font-family:var(--sans);cursor:pointer}
+.btn-solid{background:var(--ink);color:var(--canvas);border:1px solid var(--ink)}
+.btn-solid:hover{background:var(--sage-deep);border-color:var(--sage-deep)}
+.btn-ghost{border:1px solid var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--pink-deep);color:var(--pink-deep)}
+.btn-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+
+/* ---------- 이미지 틀 ---------- */
+.ph{position:relative;background:radial-gradient(120% 90% at 70% 12%,#F7F0EC 0%,#EFE6DF 55%,#E7DBD2 100%);overflow:hidden;border-radius:8px}
+.ph img{width:100%;height:100%;object-fit:cover}
+
+/* ---------- 섹션 공통 ---------- */
+.sec-inner{padding-top:var(--sec-y);padding-bottom:var(--sec-y);width:100%}
+.sec-head{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;margin-bottom:clamp(36px,5vw,60px)}
+.rule{display:block;width:44px;height:2px;background:var(--pink-deep)}
+.page-top{padding-top:clamp(56px,8vw,104px)}   /* 메뉴 바로 아래 첫 섹션 */
+
+/* ---------- 메인 첫 화면: 사진만 화면 가득 (H1·H2) ---------- */
+.hero{position:relative;height:calc(100vh - var(--header-h));height:calc(100svh - var(--header-h));min-height:380px;overflow:hidden;background:var(--paper)}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+@media (max-aspect-ratio:1/1){ .hero img{object-position:68% center} }   /* 세로 화면: 꽃이 있는 오른쪽 중심 */
+
+/* ---------- ABOUT US (메인) ---------- */
+.about-copy .title{font-family:var(--serif);font-size:clamp(1.2rem,2vw,1.55rem);line-height:1.5;color:var(--ink);margin-top:18px}
+.about-copy .sub{font-family:var(--sans);font-size:.98rem;color:var(--muted);margin-top:20px;line-height:1.8}
+.about-copy .btn{margin-top:30px}
+/* 메인 ABOUT US: 사진 없이 가운데 정렬 — 줄이 너무 길지 않게 폭 제한, 단어 중간 줄바꿈 방지 */
+.about-center{max-width:680px;margin:0 auto;text-align:center;word-break:keep-all}
+.about-center .title{margin-top:0}   /* 제목(섹션 제목+밑줄) 바로 아래라 위 여백 없음 */
+@media(max-width:860px){ br.pc-only{display:none} }   /* 넓은 화면에서만 줄바꿈 — 휴대폰은 저절로 흐르게 */
+
+/* ---------- About 페이지 ---------- */
+body.about-page{--maxw:1080px;line-height:1.7}   /* 기존 소개 페이지와 같은 폭·줄간격 */
+.about-hero{padding:clamp(56px,9vw,120px) 0 clamp(30px,5vw,54px);text-align:center}
+.about-hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.7rem,4vw,2.6rem);line-height:1.34;margin-top:20px;letter-spacing:-.01em}
+.about-hero .rule{width:36px;height:1px;margin:26px auto 0}
+.about-figure{margin:clamp(20px,4vw,40px) auto clamp(40px,6vw,68px);max-width:760px;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(74,58,48,.05),0 22px 50px -26px rgba(74,58,48,.35)}
+.about-body{max-width:640px;margin:0 auto;padding-bottom:clamp(60px,9vw,120px);text-align:center;line-height:1.7}
+.about-body .lead{font-family:var(--serif);font-size:clamp(1.25rem,2.2vw,1.6rem);color:var(--ink);margin-bottom:clamp(26px,3.6vw,40px)}
+.about-body p{font-family:var(--serif);font-size:clamp(1rem,1.7vw,1.2rem);line-height:2;color:var(--ink);margin-bottom:clamp(22px,3vw,34px);word-break:keep-all}
+.about-body p.last{color:var(--sage-deep)}
+.about-body .btn-row{margin-top:clamp(18px,3vw,34px)}
+
+/* ---------- 프로세스 (Art&Design) ---------- */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(20px,2.5vw,32px)}
+.step{position:relative;padding-top:34px}
+.step .line{position:absolute;top:16px;left:0;right:0;height:1px;background:var(--line)}
+.step .line::after{content:"";position:absolute;left:0;top:-2px;width:5px;height:5px;border-radius:50%;background:var(--sage-deep)}
+.p-ic{width:38px;height:38px;color:var(--sage-deep);margin-bottom:14px}
+.p-ic svg{width:100%;height:100%;display:block}
+.step h4{font-family:var(--serif);font-size:1.15rem;font-weight:500;margin-bottom:6px;color:var(--ink);letter-spacing:.02em}
+.step p{font-size:.88rem;color:var(--muted)}
+
+/* ---------- 프로젝트 사진 (Art&Design) ---------- */
+.gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(14px,1.8vw,22px)}
+@media(max-width:900px){.gallery{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.gallery{grid-template-columns:repeat(2,1fr)}}
+.gallery .ph{aspect-ratio:3/4}
+.gallery a{position:relative;overflow:hidden;border-radius:8px;display:block;cursor:zoom-in}
+.gallery .ph img{transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.gallery a:hover .ph img{transform:scale(1.05)}
+.lightbox{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:rgba(43,40,36,.9);padding:clamp(16px,5vw,64px);cursor:zoom-out}
+.lightbox.open{display:flex}
+.lightbox img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:6px;box-shadow:0 30px 80px -24px rgba(0,0,0,.6)}
+.lb-close{position:absolute;top:20px;right:24px;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:1.6rem;line-height:1;cursor:pointer;transition:.2s}
+.lb-close:hover{background:rgba(255,255,255,.28)}
+
+/* ---------- Workshop 카드 (예전 MFAI 카드 모양) ---------- */
+.edu{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,280px));justify-content:center;gap:clamp(20px,2.6vw,34px)}
+.edu .card{text-align:center;display:block}
+.edu .card .ph{aspect-ratio:4/5;transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s cubic-bezier(.22,1,.36,1)}
+.edu .card .ph img{transition:transform .5s cubic-bezier(.22,1,.36,1)}
+.edu .card:hover .ph{transform:translateY(-5px);box-shadow:var(--shadow)}
+.edu .card:hover .ph img{transform:scale(1.045)}
+.edu .card h4{font-family:var(--serif);font-size:1.18rem;font-weight:500;margin-top:16px;color:var(--ink)}
+.edu .card .meta{font-size:.8rem;color:var(--muted);margin-top:4px}
+.edu .card .badge{display:inline-block;margin-top:8px;font-size:.72rem;padding:2px 10px;border-radius:999px;border:1px solid var(--sage);color:var(--sage-deep);background:rgba(157,170,139,.12)}
+.edu .card .badge.off{border-color:var(--line);color:var(--muted);background:none}
+.empty{text-align:center;color:var(--muted);padding:40px 16px;line-height:2}
+
+/* ---------- 메인 Workshop 카드 (예전 메인 CLASS 영역 모양 그대로) ---------- */
+.edu.mfai{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));max-width:860px;margin-inline:auto}
+
+/* ---------- Shop 준비 중 ---------- */
+.soon{text-align:center;padding:clamp(40px,7vw,90px) 0 var(--sec-y)}
+.soon p{color:var(--muted);line-height:1.9;margin-top:22px}
+.soon .tag{display:inline-block;margin-top:26px;font-family:var(--sans);font-size:.78rem;letter-spacing:.06em;color:var(--pink-deep);border:1px solid var(--pink);border-radius:999px;padding:8px 20px}
+html[lang="en"] .soon .tag{font-family:var(--caps);font-size:.8rem;letter-spacing:.1em}   /* 영문일 때 메뉴와 같은 세리프 */
+
+/* ---------- Contact ---------- */
+.contact{background:var(--ink);color:var(--canvas)}
+.contact .eyebrow{color:var(--pink)}
+.contact-grid{display:grid;grid-template-columns:1fr 1.05fr;gap:clamp(30px,5vw,64px);align-items:start}
+.contact .contact-title{font-family:var(--serif);font-size:clamp(1.2rem,2vw,1.55rem);font-weight:400;line-height:1.35;color:var(--canvas);margin-top:16px}
+.contact-list{display:flex;flex-direction:column;gap:16px;margin-top:30px}
+.contact-list li{list-style:none;display:flex;align-items:center;gap:14px;font-size:.96rem}
+.contact-list .ic{width:20px;height:20px;color:var(--pink);flex:none}
+.contact-list a:hover{color:#fff}
+.contact-form{display:flex;flex-direction:column;gap:14px}
+.contact-form .field{display:flex;flex-direction:column;gap:7px}
+.contact-form .field span{font-size:.78rem;letter-spacing:.03em;color:var(--stone)}
+.contact-form .field span i{color:var(--pink);font-style:normal}
+.contact-form input[type=text],.contact-form textarea{font-family:var(--sans);font-size:.95rem;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:12px 14px;transition:.2s;width:100%}
+.contact-form textarea{resize:vertical;min-height:104px}
+.contact-form input::placeholder,.contact-form textarea::placeholder{color:rgba(255,255,255,.38)}
+.contact-form input:focus,.contact-form textarea:focus{outline:none;border-color:var(--pink);background:rgba(255,255,255,.09)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.consent{display:flex;align-items:flex-start;gap:9px;font-size:.8rem;color:var(--stone);line-height:1.5;cursor:pointer}
+.consent input{margin-top:3px;accent-color:var(--pink-deep);flex:none}
+.consent small{color:rgba(255,255,255,.4)}
+.submit-btn{margin-top:4px;background:var(--pink);color:#4A3A30;border:0;border-radius:999px;padding:14px 26px;font-family:var(--sans);font-size:.9rem;font-weight:700;letter-spacing:.02em;cursor:pointer;transition:.25s}
+.submit-btn:hover{background:#fff}
+.submit-btn:disabled{opacity:.6;cursor:default}
+.form-result{font-size:.86rem;min-height:1.2em;color:var(--stone)}
+.form-result.ok{color:#B7D6A6}
+.form-result.err{color:#F1A9A9}
+.hp-field{position:absolute;left:-9999px}
+
+/* ---------- 반응형 ---------- */
+@media(max-width:860px){
+  .contact-grid{grid-template-columns:1fr}
+  .field-row{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr;gap:0}
+  .step{padding:2px 0 30px 46px}
+  .step:last-child{padding-bottom:0}
+  .step .line{top:6px;bottom:0;left:12px;right:auto;width:1px;height:auto}
+  .step .line::after{display:block;left:12px;top:6px;transform:translate(-50%,0)}
+  .p-ic{width:28px;height:28px;margin-bottom:8px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto!important}
+  .reveal{opacity:1!important;transform:none!important;transition:none!important}
+}

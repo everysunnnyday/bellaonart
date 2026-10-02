@@ -1,0 +1,20 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "predeploy": ["node scripts/sync-core.js"],
+      "ignore": ["node_modules", ".git", "*.log", "*.test.js"]
+    }
+  ],
+  "emulators": {
+    "auth": { "port": 9299 },
+    "firestore": { "port": 8285 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}
