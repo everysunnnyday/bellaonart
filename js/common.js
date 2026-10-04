@@ -10,8 +10,9 @@ import {
   GoogleAuthProvider, signInWithPopup, signInWithCredential, onAuthStateChanged, signOut,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification,
   sendPasswordResetEmail, updateProfile, courseThumbUrl,
-} from "./firebase.js?v=11";
-import { t, tv, getLang, setLang, applyLang, onLangChange } from "./i18n.js?v=11";
+} from "./firebase.js?v=12";
+import { t, tv, getLang, setLang, applyLang, onLangChange } from "./i18n.js?v=12";
+import { modesOf, headOf } from "./core.js?v=12";
 
 export const KAKAO_CHANNEL = "https://pf.kakao.com/_JKTEn/chat";
 export const PHONE = "010-7302-5170";
@@ -35,6 +36,16 @@ export const thumbOf = (course, cid) => {
 
 // HTML 에 넣는 글자는 반드시 이걸 거친다(회원 이름 등으로 화면이 깨지거나 악용되는 것 방지)
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// 썸네일 왼쪽 위 온라인/오프라인 태그 · 제목 앞 말머리 — 강의 목록·상세·마이페이지·강의실이 모두 이 부품을 쓴다(판정 = core.js)
+// 태그를 넣는 칸(썸네일)은 position:relative 여야 한다(css/shell.css .mode-tags)
+export const modeTagsHtml = (c) => `<span class="mode-tags">${modesOf(c).map((m) =>
+  `<span class="mode-tag">${m === "online" ? t("온라인", "mode.online") : t("오프라인", "mode.offline")}</span>`).join("")}</span>`;
+export const headHtml = (c) => {
+  const h = headOf(c);
+  return h ? `<span class="head-label">[${esc(getLang() === "en" ? h.en : h.ko)}]</span> ` : "";
+};
+export const titleHtml = (c) => `${headHtml(c)}${esc(c?.title)}`;
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const tsMs = (v) => (v && typeof v.toMillis === "function" ? v.toMillis() : v ?? null);
 

@@ -5,14 +5,14 @@ import {
   auth, db, doc, getDoc, getDocs, updateDoc, deleteDoc, collection, query, where, orderBy,
   serverTimestamp, Timestamp, updateProfile, EmailAuthProvider, reauthenticateWithCredential,
   reauthenticateWithPopup, GoogleAuthProvider, updatePassword, deleteUser, signOut,
-} from "./firebase.js?v=11";
+} from "./firebase.js?v=12";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast, dialog, authMsg,
-  KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate, refreshAuthArea,
-} from "./common.js?v=11";
-import { enrollState, canExtend, daysLeft, fmtLeft, fmtPeriod, endSortKey, noEnd, courseStat, fmtPct, fmtDate, DAY } from "./core.js?v=11";
-import { mountCategories } from "./course-list.js?v=11";
-import { patternsOf, openPatternDialog } from "./files.js?v=11";
+  KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate, refreshAuthArea, modeTagsHtml, titleHtml,
+} from "./common.js?v=12";
+import { enrollState, canExtend, daysLeft, fmtLeft, fmtPeriod, endSortKey, noEnd, courseStat, fmtPct, fmtDate, DAY } from "./core.js?v=12";
+import { mountCategories } from "./course-list.js?v=12";
+import { patternsOf, openPatternDialog } from "./files.js?v=12";
 
 initShell({ active: "mypage", kakao: false });
 const box = $("#my");
@@ -93,9 +93,9 @@ function renderClass() {
     const complete = stat?.complete || !!prog?.completedAt;
     const ext = policy && canExtend(e, now);
     return `<div class="my-item">
-      <div class="thumb" style="background-image:url('${esc(thumbOf(course, e.courseId))}')"></div>
+      <div class="thumb" style="background-image:url('${esc(thumbOf(course, e.courseId))}')">${modeTagsHtml(course)}</div>
       <div>
-        <h3>${esc(course.title)}</h3>
+        <h3>${titleHtml(course)}</h3>
         <div class="line">
           <span class="badge ${warn ? "warn" : state === "active" ? "active" : ""}">${esc(leftTxt)}</span>
           ${complete ? `<span class="badge done">수강 완료</span>` : ""}

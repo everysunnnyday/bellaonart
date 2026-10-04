@@ -6,16 +6,16 @@
 // - 무료 강좌(수강료 0·0원·무료): 인증된 회원이 열면 수강권(기간 제한 없음)을 자동으로 받고 바로 강의실 — claimFree
 import {
   db, CONFIGURED, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, orderBy, serverTimestamp, Timestamp, redeemCode,
-} from "./firebase.js?v=11";
+} from "./firebase.js?v=12";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast,
-  notConfiguredHtml, KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate,
-} from "./common.js?v=11";
+  notConfiguredHtml, KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate, modeTagsHtml, titleHtml,
+} from "./common.js?v=12";
 import { enrollState, fmtLeft, fmtPeriod, lessonStat, courseStat, fmtDur, fmtPct, fmtDate, courseDays, fmtPrice, isFreePrice,
-  startOfKstDay, kstDateStr } from "./core.js?v=11";
-import { LessonTracker } from "./youtube.js?v=11";
-import { patternsOf, openPatternDialog } from "./files.js?v=11";
-import { t, tv, onLangChange } from "./i18n.js?v=11";
+  startOfKstDay, kstDateStr, modesOf, isOfflineOnly } from "./core.js?v=12";
+import { LessonTracker } from "./youtube.js?v=12";
+import { patternsOf, openPatternDialog } from "./files.js?v=12";
+import { t, tv, onLangChange } from "./i18n.js?v=12";
 
 initShell({ active: "workshop" });
 const app = $("#app");
@@ -64,11 +64,13 @@ function renderDetail(state) {
   const total = lessons.reduce((s, l) => s + (l.durationSec || 0), 0);
   const days = policy && courseDays(course, policy);
   const free = isFreePrice(course.priceLabel);
+  const offline = isOfflineOnly(course);   // 오프라인만 = 영상 구성·수강 기간 없음, 신청만
+  const modes = modesOf(course);
   const canDl = state === "enrolled" || state === "preview";   // 도안을 받을 수 있는 화면(수강 중 · 관리자)
   const facts = [
     course.priceLabel ? [t("수강료", "cd.price"), esc(fmtPrice(course.priceLabel, t("무료", "cd.free")))] : null,
     lessons.length ? [t("구성", "cd.parts"), tv("{n}강 · 총 {d}", "cd.partsVal", { n: lessons.length, d: fmtDur(total) })] : null,
-    free ? [t("수강 기간", "cd.period"), t("기간 제한 없음", "cd.periodFree")]
+    offline ? null : free ? [t("수강 기간", "cd.period"), t("기간 제한 없음", "cd.periodFree")]
       : days ? [t("수강 기간", "cd.period"), tv("{d}일 · 1회 무료 연장 +{e}일", "cd.periodVal", { d: days, e: policy.extendDays })] : null,
     course.materials ? [t("준비물", "cd.materials"), esc(course.materials)] : null,   // 관리자 입력(강좌마다)
     // 도안 = 관리자가 PDF 를 올리면 자동 · [도안 내려받기] → 팝업 목록 · 받을 수 없는 사람(비회원·미수강)은 흐리게·누를 수 없음
@@ -79,25 +81,31 @@ function renderDetail(state) {
 
   app.innerHTML = `<article class="detail">
     <div class="d-top">
-      <div class="d-thumb" style="background-image:url('${esc(thumbOf(course, cid))}')"></div>
+      <div class="d-thumb" style="background-image:url('${esc(thumbOf(course, cid))}')">${modeTagsHtml(course)}</div>
       <div class="d-info">
-        <span class="eyebrow">Online Class</span>
-        <h1>${esc(course.title)}</h1>
+        <span class="eyebrow">${modes.length === 2 ? "Online &amp; Offline Class" : offline ? "Offline Class" : "Online Class"}</span>
+        <h1>${titleHtml(course)}</h1>
         ${course.summary ? `<p class="d-sum">${esc(course.summary)}</p>` : ""}
         ${facts.length ? `<dl class="d-facts">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>` : ""}
         <div class="d-act" id="act"></div>
       </div>
     </div>
     ${desc ? `<section class="d-sec"><h2>${t("강좌 소개", "cd.about")}</h2><p class="d-desc">${esc(desc)}</p></section>` : ""}
-    <section class="d-sec"><h2>${t("강의 목차", "cd.outline")}</h2>
+    ${offline && !lessons.length ? "" : `<section class="d-sec"><h2>${t("강의 목차", "cd.outline")}</h2>
       ${lessons.length ? `<ol class="d-outline">${lessons.map((l, i) => `<li><span class="no">${i + 1}</span>
         <span class="t">${esc(l.title)}</span><span class="dur">${fmtDur(l.durationSec)}</span></li>`).join("")}</ol>`
         : `<p class="hint">${t("강의 영상을 준비하고 있습니다.", "cd.noLessons")}</p>`}
-    </section>
+    </section>`}
   </article>`;
 
   if (canDl && $("#patOpen")) $("#patOpen").onclick = () => openPatternDialog(cid, course);
   const act = $("#act");
+  // 오프라인만 = 로그인과 상관없이 신청만(강의실·수강 코드 없음 — 2026-10-04 써니님)
+  if (state === "offline") {
+    act.innerHTML = `<div class="d-apply"><p class="d-msg">${t("카카오톡으로 신청하시면 일정과 결제 방법을 안내해드립니다.", "cd.offApply")}</p>
+      <div class="btns">${applyBtn()}</div></div>`;
+    return;
+  }
   if (state === "login") {
     act.innerHTML = `<p class="d-msg">${free ? t("회원이면 누구나 무료로 수강할 수 있습니다. 로그인해 주세요.", "cd.freeLogin")
       : t("로그인 후 수강 신청과 수강 코드 입력을 할 수 있습니다.", "cd.needLogin")}</p>
@@ -177,7 +185,7 @@ function renderRoom() {
     <aside class="side card-box">
       <a class="back-link" href="/class/watch.html?c=${encodeURIComponent(cid)}">← 강좌 소개</a>
       <span class="eyebrow">Course</span>
-      <h3 style="font-family:var(--serif);font-weight:500;font-size:1.25rem;line-height:1.35;margin:6px 0 14px">${esc(course.title)}</h3>
+      <h3 style="font-family:var(--serif);font-weight:500;font-size:1.25rem;line-height:1.35;margin:6px 0 14px">${titleHtml(course)}</h3>
       <div class="sum"><span class="small muted">수강률</span><b id="cPct">0%</b></div>
       <div class="bar" id="cBar"><i></i></div>
       <div class="small muted" id="cMeta"></div>
@@ -303,6 +311,7 @@ async function enter() {
   lessons = ls ? ls.docs.map((d) => ({ id: d.id, ...d.data() })) : [];
   policy = pol;
 
+  if (isOfflineOnly(course)) return renderDetail("offline");   // 오프라인만 = 누구나 신청만(무료 자동 수강·강의실 없음)
   if (!me) return renderDetail("login");
   if (needsVerify(me.user)) return renderDetail("verify");
   app.onclick = null;

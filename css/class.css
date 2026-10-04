@@ -46,7 +46,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* ---------- 내 강의실 ---------- */
 .my-list{display:flex;flex-direction:column;gap:16px}
 .my-item{display:grid;grid-template-columns:160px 1fr auto;gap:20px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px}
-.my-item .thumb{aspect-ratio:16/9;border-radius:8px;background:var(--line) center/cover no-repeat}
+.my-item .thumb{position:relative;aspect-ratio:16/9;border-radius:8px;background:var(--line) center/cover no-repeat}
 .my-item h3{font-family:var(--serif);font-weight:500;font-size:1.2rem;line-height:1.3}
 .my-item .line{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:.8rem;color:var(--muted);margin-top:6px}
 .my-item .bar{margin-top:10px}
@@ -92,7 +92,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* ---------- 강좌 상세 (누구나 · 수강권 없을 때) ---------- */
 .detail{max-width:1040px;margin:0 auto}
 .d-top{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(24px,4vw,52px);align-items:start}
-.d-thumb{aspect-ratio:16/9;border-radius:12px;background:var(--line) center/cover no-repeat}
+.d-thumb{position:relative;aspect-ratio:16/9;border-radius:12px;background:var(--line) center/cover no-repeat}
 .d-info h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.05rem,1.6vw,1.15rem);line-height:1.4;margin-top:8px}   /* 예전 크기의 절반(2026-10-03 써니님) */
 .d-sum{color:var(--ink-soft);margin-top:10px;font-size:.95rem}
 .d-facts{margin-top:22px;border-top:1px solid var(--line)}

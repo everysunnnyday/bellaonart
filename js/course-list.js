@@ -4,10 +4,10 @@
 // - 강좌는 관리자 페이지에서 카테고리를 여러 개 고를 수 있다(courses.categories = ["paper-flower", …])
 // - 카드를 누르면: 그 카테고리에 공개 강좌가 있으면 강의 목록(/workshop.html?cat=ID), 없으면 '준비 중' 페이지
 // - 강의 목록의 강좌 카드 그림 = 1차시 유튜브 썸네일(서버가 대신 가져옴 — common.js thumbOf)
-import { db, collection, query, where, getDocs } from "./firebase.js?v=11";
-import { watchUser, esc, toEnr, initReveal, thumbOf } from "./common.js?v=11";
-import { enrollState, fmtLeft, fmtPrice } from "./core.js?v=11";
-import { t, tv, onLangChange } from "./i18n.js?v=11";
+import { db, collection, query, where, getDocs } from "./firebase.js?v=12";
+import { watchUser, esc, toEnr, initReveal, thumbOf, modeTagsHtml, titleHtml } from "./common.js?v=12";
+import { enrollState, fmtLeft, fmtPrice, isOfflineOnly } from "./core.js?v=12";
+import { t, tv, onLangChange } from "./i18n.js?v=12";
 
 // intro = 카테고리 강의 목록 위에 나오는 소개(사진 왼쪽 · 글 오른쪽). 한국어는 여기, 영문은 i18n.js(cat.<id>.*)
 //         소개가 없는 카테고리는 제목·목록만 보인다. 문단은 body 배열 한 칸 = 한 문단.
@@ -67,14 +67,16 @@ function catsHtml(shown) {
 
 // ---------- 카테고리 안 강의 목록 ----------
 function courseInfo(c, now) {
-  const meta = c.lessonCount
+  // 오프라인만인 강좌는 영상 구성 대신 수강료만
+  const meta = isOfflineOnly(c) ? "" : c.lessonCount
     ? tv("{n}강 · 총 {min}분", "ws.meta", { n: c.lessonCount, min: Math.round((c.totalSec || 0) / 60) })
     : t("준비 중", "ws.soon");
   const e = myEnr[c.id];
   const st = enrollState(e, now);
   const badge = st === "active" ? `<span class="badge">${tv("수강 중 · {left}", "ws.enrolled", { left: leftText(e.endAt, now) })}</span>`
     : st === "expired" ? `<span class="badge off">${t("기간 종료", "ws.expired")}</span>` : "";
-  return `<p class="meta">${esc(meta)}${c.priceLabel ? ` · ${esc(fmtPrice(c.priceLabel, t("무료", "cd.free")))}` : ""}</p>${badge}`;
+  const info = [meta, c.priceLabel ? fmtPrice(c.priceLabel, t("무료", "cd.free")) : ""].filter(Boolean).map(esc).join(" · ");
+  return `${info ? `<p class="meta">${info}</p>` : ""}${badge}`;
 }
 function listHtml(shown) {
   if (!courses) return `<div class="empty">${t("강좌를 불러오는 중…", "ws.loading")}</div>`;
@@ -83,7 +85,7 @@ function listHtml(shown) {
   const now = Date.now();
   // 강의 목록 카드 = 한 줄 3개 · 16:9 썸네일(1차시 유튜브 썸네일과 같은 비율이라 잘리지 않음) — 2026-10-04 써니님
   return `<div class="edu course-grid">${list.map((c, i) => `<a class="card reveal${shown ? " in" : ""}" style="${delay(i)}" href="/class/watch.html?c=${encodeURIComponent(c.id)}">
-      <div class="ph"><img src="${esc(thumbOf(c, c.id))}" alt="${esc(c.title)}"></div><h4>${esc(c.title)}</h4>${courseInfo(c, now)}</a>`).join("")}</div>`;
+      <div class="ph"><img src="${esc(thumbOf(c, c.id))}" alt="${esc(c.title)}">${modeTagsHtml(c)}</div><h4>${titleHtml(c)}</h4>${courseInfo(c, now)}</a>`).join("")}</div>`;
 }
 
 function render() {

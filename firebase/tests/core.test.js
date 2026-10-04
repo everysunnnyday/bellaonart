@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   DAY, DEFAULT_POLICY as P, kstDateStr, startOfKstDay, endOfKstDay, defaultEndStr, daysLeft, fmtLeft,
   enrollState, canExtend, needsReminder, addSegment, watchedSec, isContinuous, lessonStat, courseStat, fmtDur,
-  fmtPrice, isFreePrice, fmtPeriod, endSortKey, noEnd,
+  fmtPrice, isFreePrice, fmtPeriod, endSortKey, noEnd, modesOf, isOfflineOnly, headOf, HEADS,
 } from "../../js/core.js";
 
 const at = (dateStr, hhmm = "09:00") => Date.parse(`${dateStr}T${hhmm}:00+09:00`);
@@ -157,6 +157,29 @@ test("기간 제한 없음(종료일 null): 만료·연장·리마인드 없음 
   assert.equal(noEnd(t), false);
   assert.equal(canExtend(t, now), true);
   assert.equal(needsReminder(t, P, now), true);
+});
+
+test("수업 방식: 값 없으면 온라인 · 둘 다 가능 · 오프라인만 판정", () => {
+  assert.deepEqual(modesOf({}), ["online"]);
+  assert.deepEqual(modesOf({ modes: [] }), ["online"]);
+  assert.deepEqual(modesOf({ modes: ["offline", "online"] }), ["online", "offline"]);   // 표시 순서 고정
+  assert.deepEqual(modesOf({ modes: ["offline", "x"] }), ["offline"]);                // 모르는 값은 무시
+  assert.equal(isOfflineOnly({}), false);
+  assert.equal(isOfflineOnly({ modes: ["offline"] }), true);
+  assert.equal(isOfflineOnly({ modes: ["online", "offline"] }), false);
+});
+
+test("말머리: 자동(수강료 기준) · 직접 고름 · 없음", () => {
+  const id = (c) => headOf(c)?.id ?? null;
+  assert.equal(id({ priceLabel: "0" }), "free");
+  assert.equal(id({ priceLabel: "무료" }), "free");
+  assert.equal(id({ priceLabel: "30000" }), "paid");
+  assert.equal(id({ priceLabel: "" }), null);                         // 수강료 비면 자동 말머리 없음
+  assert.equal(id({ priceLabel: "30000", head: "free" }), "free");    // 관리자가 직접 바꾼 것 우선
+  assert.equal(id({ priceLabel: "0", head: "paid" }), "paid");
+  assert.equal(id({ priceLabel: "0", head: "none" }), null);
+  assert.equal(id({ priceLabel: "0", head: "없는값" }), null);
+  assert.deepEqual(HEADS.map((h) => h.ko), ["무료", "유료"]);
 });
 
 test("시간 표시", () => {

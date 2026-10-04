@@ -45,6 +45,28 @@ export const fmtPrice = (s, freeLabel = "무료") => {
   return /^\d[\d,]*$/.test(v) ? v + "원" : v;
 };
 
+// ---------- 수업 방식(온라인/오프라인) · 말머리 (2026-10-04 써니님) ----------
+// 강좌 문서 modes = ["online"] · ["offline"] · 둘 다 — 관리자 체크박스. 값이 없던 옛 강좌 = 온라인(지금까지 모두 영상 강좌)
+export const MODES = ["online", "offline"];
+export const modesOf = (c) => (Array.isArray(c?.modes) && c.modes.length ? MODES.filter((m) => c.modes.includes(m)) : ["online"]);
+// 오프라인만 = 강좌 상세에 강의실·수강 코드 대신 [카카오톡으로 수강 신청]만
+export const isOfflineOnly = (c) => !modesOf(c).includes("online");
+
+// 말머리 목록 — 새 말머리가 필요하면 여기에 한 줄 추가(id = 저장값 · ko/en = 표시). 관리자 선택지·모든 화면 표시가 이 목록 하나를 쓴다
+export const HEADS = [
+  { id: "free", ko: "무료", en: "Free" },
+  { id: "paid", ko: "유료", en: "Paid" },
+];
+// 강좌의 말머리: course.head 가 비었으면 자동(수강료 0·0원·무료 → 무료, 그 밖의 수강료 → 유료, 수강료 비면 없음)
+// "none" = 안 붙임 · HEADS 의 id = 관리자가 직접 고른 것
+export function headOf(c) {
+  const h = c?.head || "";
+  if (h === "none") return null;
+  if (h) return HEADS.find((x) => x.id === h) || null;
+  if (!String(c?.priceLabel ?? "").trim()) return null;
+  return HEADS.find((x) => x.id === (isFreePrice(c.priceLabel) ? "free" : "paid")) || null;
+}
+
 // 수강 코드 글자 규칙 — 영문 소문자·숫자·하이픈 4~30자, 대소문자 구분 없음(소문자로 바꿔 저장·비교)
 // 관리자 화면(만들기)·서버 함수(확인)·보안 규칙이 같은 규칙을 쓴다.
 export const CODE_RE = /^[a-z0-9-]{4,30}$/;

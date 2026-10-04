@@ -1,4 +1,4 @@
-// 에뮬레이터 전용: 검사가 중간에 멈춰 남은 시험 강좌(files-·free-·free2-·paid-)를 비공개로 내린다 — 실제 Firebase 에는 쓰지 않는다
+// 에뮬레이터 전용: 검사가 중간에 멈춰 남은 시험 강좌(files-·free-·free2-·paid-·tag-)를 비공개로 내린다 — 실제 Firebase 에는 쓰지 않는다
 // 사용: 에뮬레이터를 켠 상태에서  node scripts/unpublish-test.js
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -14,7 +14,7 @@ const env = await initializeTestEnvironment({
 let n = 0;
 await env.withSecurityRulesDisabled(async (c) => {
   for (const d of (await getDocs(collection(c.firestore(), "courses"))).docs) {
-    if (/^(files-|free-|free2-|paid-)/.test(d.id) && d.data().published) { await updateDoc(d.ref, { published: false }); n++; }
+    if (/^(files-|free-|free2-|paid-|tag-)/.test(d.id) && d.data().published) { await updateDoc(d.ref, { published: false }); n++; }
   }
 });
 await env.cleanup();

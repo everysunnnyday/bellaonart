@@ -6,19 +6,19 @@
 import {
   db, CONFIGURED, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, where, orderBy,
   writeBatch, serverTimestamp, Timestamp,
-} from "./firebase.js?v=11";
+} from "./firebase.js?v=12";
 import {
   initShell, watchUser, esc, $, toEnr, tsMs, loadPolicy, login, toast, dialog, notConfiguredHtml, thumbOf,
-} from "./common.js?v=11";
+} from "./common.js?v=12";
 import {
   uploadThumb, deleteThumb, uploadPattern, deletePattern, downloadPattern, patternsOf, fmtSize, PATTERN_MAX, THUMB_MAX_W,
-} from "./files.js?v=11";
+} from "./files.js?v=12";
 import {
   DEFAULT_POLICY, enrollState, fmtLeft, fmtPeriod, isFreePrice, courseStat, fmtDur, fmtPct, fmtDate,
-  kstDateStr, startOfKstDay, endOfKstDay, defaultEndStr, courseDays, CODE_RE, normCode,
-} from "./core.js?v=11";
-import { parseYouTubeId, probeVideo } from "./youtube.js?v=11";
-import { CATEGORIES } from "./course-list.js?v=11";   // 카테고리 3개는 이 한 곳에 고정
+  kstDateStr, startOfKstDay, endOfKstDay, defaultEndStr, courseDays, CODE_RE, normCode, MODES, modesOf, HEADS, headOf,
+} from "./core.js?v=12";
+import { parseYouTubeId, probeVideo } from "./youtube.js?v=12";
+import { CATEGORIES } from "./course-list.js?v=12";   // 카테고리 3개는 이 한 곳에 고정
 
 initShell({ active: "admin", kakao: false });
 const root = $("#admin");
@@ -168,6 +168,16 @@ async function renderCourseEditor() {
       <div class="field">카테고리 (여러 개 고를 수 있음)
         <div class="cat-checks">${CATEGORIES.map((k) => `<label class="check"><input type="checkbox" name="cat" value="${k.id}" ${(c.categories || []).includes(k.id) ? "checked" : ""}> ${esc(k.title)}</label>`).join("")}</div>
         <span class="hint">고른 카테고리의 강의 목록에 나옵니다. 메인·Workshop 카테고리 카드는 공개 강좌가 하나라도 있으면 목록으로, 없으면 '준비 중'으로 연결됩니다.</span></div>
+      <div class="field">수업 방식 (둘 다 고를 수 있음)
+        <div class="cat-checks">${MODES.map((m) => `<label class="check"><input type="checkbox" name="mode" value="${m}" ${modesOf(c).includes(m) ? "checked" : ""}> ${m === "online" ? "온라인" : "오프라인"}</label>`).join("")}</div>
+        <span class="hint">썸네일 왼쪽 위 태그로 보입니다 · <b>오프라인만</b> 고르면 강좌 상세에 강의실·수강 코드 대신 [카카오톡으로 수강 신청]만 보입니다</span></div>
+      <label class="field">말머리 (제목 앞 [무료]·[유료])
+        <select name="head">
+          <option value="" ${!c.head ? "selected" : ""}>자동 — 수강료 기준(0·0원·무료 = 무료, 그 밖 = 유료)</option>
+          ${HEADS.map((h) => `<option value="${h.id}" ${c.head === h.id ? "selected" : ""}>${esc(h.ko)}</option>`).join("")}
+          <option value="none" ${c.head === "none" ? "selected" : ""}>없음</option>
+        </select>
+        <span class="hint">지금 보이는 말머리: <b id="headNow"></b> · 새 말머리가 필요하면 목록(js/core.js HEADS)에 추가합니다</span></label>
       <div id="cFiles">${isNew ? `<p class="hint">썸네일·도안 PDF 는 강좌를 만든 뒤 여기서 올릴 수 있습니다.</p>` : ""}</div>
       <label class="check"><input type="checkbox" name="published" ${c.published ? "checked" : ""}> 공개 (Workshop 페이지에 보임)</label>
       <div><button type="submit" class="btn solid">${isNew ? "강좌 만들기" : "저장"}</button></div>
@@ -176,6 +186,9 @@ async function renderCourseEditor() {
   ${isNew ? "" : `<div class="card-box" style="margin-top:20px" id="lBox"><div class="empty">차시 불러오는 중…</div></div>`}`;
 
   $("#cForm").onsubmit = (e) => { e.preventDefault(); saveCourse(isNew); };
+  // 말머리 미리보기 — 수강료·말머리 칸을 바꾸면 바로(판정 = core.js headOf)
+  const showHead = () => { const f = $("#cForm"), h = headOf({ head: f.head.value, priceLabel: f.priceLabel.value }); $("#headNow").textContent = h ? `[${h.ko}]` : "없음"; };
+  $("#cForm").head.onchange = showHead; $("#cForm").priceLabel.oninput = showHead; showHead();
   if (!isNew) renderCourseFiles(c);
   if (!isNew) {
     S.lessons = await loadLessons(c.id);
@@ -295,9 +308,12 @@ async function saveCourse(isNew) {
     priceLabel: f.priceLabel.value.trim(), materials: f.materials.value.trim(),   // 썸네일·도안은 아래 끌어다 놓기 칸이 바로 저장
     defaultDays: parseInt(f.defaultDays.value, 10),
     categories: [...f.querySelectorAll("[name=cat]:checked")].map((x) => x.value),
+    modes: [...f.querySelectorAll("[name=mode]:checked")].map((x) => x.value),
+    head: f.head.value,
     published: f.published.checked, updatedAt: serverTimestamp(),
   };
   if (data.published && !data.categories.length) return toast("공개하려면 카테고리를 하나 이상 골라 주세요(목록에 나올 곳).");
+  if (!data.modes.length) return toast("수업 방식(온라인·오프라인)을 하나 이상 골라 주세요.");
   if (!ID_RE.test(id)) return toast("강좌 ID는 영문 소문자·숫자·하이픈 2~40자로 정해 주세요.");
   if (!data.title) return toast("강좌 제목을 입력해 주세요.");
   if (!(data.defaultDays >= 1)) return toast("기본 수강기간은 1일 이상이어야 합니다.");
