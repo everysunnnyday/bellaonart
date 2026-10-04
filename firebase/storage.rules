@@ -9,12 +9,11 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    function fsDoc(path) { return firestore.get(/databases/(default)/documents/$(path)); }
-
+    // 관리자 명단 위치는 경로를 그대로 적는다($() 한 칸에 'config/admins' 처럼 '/' 를 넣지 않음 — 실서버에선 한 이름으로 해석될 수 있음)
     function isAdmin() {
       return request.auth != null
         && request.auth.token.email_verified == true
-        && request.auth.token.email.lower() in fsDoc('config/admins').data.emails;
+        && request.auth.token.email.lower() in firestore.get(/databases/(default)/documents/config/admins).data.emails;
     }
 
     function hasValid(cid) {
