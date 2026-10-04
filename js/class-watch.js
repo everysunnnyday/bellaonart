@@ -1,25 +1,29 @@
 // 강좌 상세 · 강의실 (/class/watch.html?c=코스ID[&l=차시ID])
 // - 누구나: 강좌 상세(소개·가격·목차·수강 기간) — 목차는 공개 칸(lessons)만 읽는다(영상 주소 없음)
-// - 수강권 있는 회원: 강의실(영상 시청 · 실제 시청 구간 기록 · 수강률) — 영상 주소(videos)는 이때만 읽힌다
+// - 모든 입구는 상세 먼저(Workshop·마이페이지·공유 링크) → 수강 중이면 상세에 [강의실 입장]/[이어보기]·도안
+// - 강의실(&room=1, 수강권 있는 회원): 영상 시청 · 실제 시청 구간 기록 · 수강률 — 영상 주소(videos)는 이때만 읽힌다
 // - 수강권 없는 회원: [수강 신청] 영역(카카오톡) + [수강 코드] 영역(서버 함수 redeemCode 가 확인 후 수강권 생성) — 두 영역을 나눠 보여 줌
 // - 무료 강좌(수강료 0·0원·무료): 인증된 회원이 열면 수강권(기간 제한 없음)을 자동으로 받고 바로 강의실 — claimFree
 import {
   db, CONFIGURED, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, orderBy, serverTimestamp, Timestamp, redeemCode,
-} from "./firebase.js?v=7";
+} from "./firebase.js?v=8";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast,
   notConfiguredHtml, KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate,
-} from "./common.js?v=7";
+} from "./common.js?v=8";
 import { enrollState, fmtLeft, fmtPeriod, lessonStat, courseStat, fmtDur, fmtPct, fmtDate, courseDays, fmtPrice, isFreePrice,
-  startOfKstDay, kstDateStr } from "./core.js?v=7";
-import { LessonTracker } from "./youtube.js?v=7";
-import { patternsOf, patternButtonsHtml, bindPatternButtons } from "./files.js?v=7";
-import { t, tv, onLangChange } from "./i18n.js?v=7";
+  startOfKstDay, kstDateStr } from "./core.js?v=8";
+import { LessonTracker } from "./youtube.js?v=8";
+import { patternsOf, patternButtonsHtml, bindPatternButtons } from "./files.js?v=8";
+import { t, tv, onLangChange } from "./i18n.js?v=8";
 
 initShell({ active: "workshop" });
 const app = $("#app");
 const params = new URLSearchParams(location.search);
 const cid = params.get("c");
+// 모든 입구 = 강좌 상세 먼저(2026-10-04 써니님) — 강의실은 상세의 [강의실 입장]으로만(주소 &room=1)
+let wantRoom = params.get("room") === "1";
+const roomHref = () => `/class/watch.html?c=${encodeURIComponent(cid)}&room=1`;
 
 let me = null, course = null, enr = null, policy = null, lessons = [], progress = null;
 let tracker = null, curId = null, preview = false;
@@ -98,6 +102,21 @@ function renderDetail(state) {
     return;
   }
   if (state === "verify") { act.innerHTML = verifyGateHtml(me.user); bindVerifyGate(act, me.user); return; }
+  // 수강 중 = 남은 기간 + [강의실 입장]/[이어보기] + 도안 · 관리자(수강권 없음) = 미리보기 버튼
+  if (state === "enrolled") {
+    const started = Object.keys(progress?.lessons || {}).length > 0;
+    const left = fmtLeft(enr.endAt, Date.now(), { today: t("오늘 종료", "left.today"), days: t("{d}일 남음", "left.days"), none: t("기간 제한 없음", "left.none") });
+    act.innerHTML = `<p class="d-msg">${tv("수강 중입니다 · {left}", "cd.enrolled", { left })}</p>
+      <div class="btns"><a class="btn solid" id="roomBtn" href="${roomHref()}">${started ? t("이어보기", "cd.continue") : t("강의실 입장", "cd.enter")}</a></div>
+      ${patternsOf(course).length ? `<div class="pat-box"><span class="small muted">${t("도안 내려받기 (PDF)", "cd.patDl")}</span>${patternButtonsHtml(cid, course)}</div>` : ""}`;
+    bindPatternButtons(act);
+    return;
+  }
+  if (state === "preview") {
+    act.innerHTML = `<p class="d-msg">관리자 계정입니다 — 수강권 없이 강의실을 미리 볼 수 있습니다(진도는 저장되지 않음).</p>
+      <div class="btns"><a class="btn solid" id="roomBtn" href="${roomHref()}">관리자 미리보기로 강의실</a></div>`;
+    return;
+  }
   // 시작 전 · 회수 = 안내 한 줄(+ 회수는 문의 버튼)
   if (state === "upcoming" || state === "revoked") {
     act.innerHTML = state === "upcoming"
@@ -130,6 +149,8 @@ async function onRedeem(e) {
     const r = await redeemCode(code);
     if (!r.ok) { out.className = "code-msg err"; out.textContent = redeemMsg(r.reason); btn.disabled = false; return; }
     toast(t("수강권이 등록되었습니다. 바로 시작해 보세요!", "cd.codeOk"), 4000);
+    wantRoom = true;   // 코드를 넣은 곳이 이미 상세 → 바로 강의실(새로고침해도 강의실이게 주소도 바꿈)
+    history.replaceState(null, "", roomHref());
     await enter();
   } catch (err) {
     console.error(err);
@@ -146,13 +167,13 @@ function renderRoom() {
   <div class="watch">
     <section class="now">
       <div class="player-box" id="pbox"></div>
-      <h2 id="lTitle"></h2>
       <div class="line"><span id="lMeta"></span><span id="lState"></span></div>
       <div class="bar" id="lBar"><i></i></div>
       <p class="notice">영상의 ${Math.round(policy.completeRatio * 100)}% 이상을 실제로 시청하면 차시가 완료됩니다.
         ${policy.maxRate}배속까지 수강으로 인정되며, 건너뛴 구간은 수강률에 포함되지 않습니다.</p>
     </section>
     <aside class="side card-box">
+      <a class="back-link" href="/class/watch.html?c=${encodeURIComponent(cid)}">← 강좌 소개</a>
       <span class="eyebrow">Course</span>
       <h3 style="font-family:var(--serif);font-weight:500;font-size:1.25rem;line-height:1.35;margin:6px 0 14px">${esc(course.title)}</h3>
       <div class="sum"><span class="small muted">수강률</span><b id="cPct">0%</b></div>
@@ -224,10 +245,9 @@ async function openLesson(lid) {
   if (tracker) { await tracker.destroy(); tracker = null; }
   curId = lid;
   const l = lessons.find((x) => x.id === lid);
-  history.replaceState(null, "", `?c=${encodeURIComponent(cid)}&l=${encodeURIComponent(lid)}`);
+  history.replaceState(null, "", `${roomHref()}&l=${encodeURIComponent(lid)}`);   // 강의실 주소(room=1) + 지금 차시 → 새로고침해도 이 차시
   $("#pbox").innerHTML = `<div id="player"></div>`;
   // 제목은 관리자가 입력한 그대로, 차시 번호는 정보 줄에(제목에 번호를 넣어도 겹치지 않게)
-  $("#lTitle").textContent = l.title;
   $("#lMeta").textContent = `${lessons.indexOf(l) + 1}강 · ${fmtDur(l.durationSec)}`;
   refresh();
   tracker = new LessonTracker({
@@ -292,6 +312,10 @@ async function enter() {
   preview = state !== "active" && me.isAdmin;
   if (state !== "active" && !preview) return renderDetail(state);
   if (preview) enr = null;
+  if (!wantRoom) {   // 수강 중이어도 먼저 상세(준비물·소개·목차) — 강의실은 [강의실 입장]
+    progress = preview ? null : ((await getDoc(doc(db, "progress", `${me.uid}_${cid}`)).catch(() => null))?.data() || null);
+    return renderDetail(preview ? "preview" : "enrolled");
+  }
 
   if (!policy) return notice("운영 기준이 아직 설정되지 않았습니다. 관리자에게 문의해 주세요.", askBtns());
   if (!lessons.length) return notice("아직 등록된 영상이 없습니다. 곧 열립니다.", `<a class="btn" href="/mypage.html">My Class</a>`);

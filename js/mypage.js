@@ -5,14 +5,14 @@ import {
   auth, db, doc, getDoc, getDocs, updateDoc, deleteDoc, collection, query, where, orderBy,
   serverTimestamp, Timestamp, updateProfile, EmailAuthProvider, reauthenticateWithCredential,
   reauthenticateWithPopup, GoogleAuthProvider, updatePassword, deleteUser, signOut,
-} from "./firebase.js?v=7";
+} from "./firebase.js?v=8";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast, dialog, authMsg,
   KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate, refreshAuthArea,
-} from "./common.js?v=7";
-import { enrollState, canExtend, daysLeft, fmtLeft, fmtPeriod, endSortKey, noEnd, courseStat, fmtPct, fmtDate, DAY } from "./core.js?v=7";
-import { mountCategories } from "./course-list.js?v=7";
-import { patternButtonsHtml, bindPatternButtons } from "./files.js?v=7";
+} from "./common.js?v=8";
+import { enrollState, canExtend, daysLeft, fmtLeft, fmtPeriod, endSortKey, noEnd, courseStat, fmtPct, fmtDate, DAY } from "./core.js?v=8";
+import { mountCategories } from "./course-list.js?v=8";
+import { patternButtonsHtml, bindPatternButtons } from "./files.js?v=8";
 
 initShell({ active: "mypage", kakao: false });
 const box = $("#my");
@@ -107,7 +107,7 @@ function renderClass() {
           : `<div class="line"><span>완료한 차시 ${doneCount}개</span></div>`}
       </div>
       <div class="acts">
-        ${state === "active" ? `<a class="btn solid" href="/class/watch.html?c=${encodeURIComponent(e.courseId)}">${pct ? "이어보기" : "강의실 입장"}</a>` : ""}
+        ${state === "active" ? `<a class="btn solid" href="/class/watch.html?c=${encodeURIComponent(e.courseId)}">강좌 보기</a>` : ""}
         ${ext ? `<button type="button" class="btn sage" data-ext="${i}">수강 연장 +${policy.extendDays}일 (무료)</button>` : ""}
         ${state === "active" ? patternButtonsHtml(e.courseId, course) : ""}
         ${(state === "expired" || state === "revoked") && live ? `<a class="btn" href="${KAKAO_CHANNEL}" target="_blank" rel="noopener">수강 문의</a>` : ""}

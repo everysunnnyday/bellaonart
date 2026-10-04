@@ -55,7 +55,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* ---------- 내 강의실 ---------- */
 .my-list{display:flex;flex-direction:column;gap:16px}
 .my-item{display:grid;grid-template-columns:160px 1fr auto;gap:20px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px}
-.my-item .thumb{aspect-ratio:16/10;border-radius:8px;background:var(--line) center/cover no-repeat}
+.my-item .thumb{aspect-ratio:16/9;border-radius:8px;background:var(--line) center/cover no-repeat}
 .my-item h3{font-family:var(--serif);font-weight:500;font-size:1.2rem;line-height:1.3}
 .my-item .line{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:.8rem;color:var(--muted);margin-top:6px}
 .my-item .bar{margin-top:10px}
@@ -70,7 +70,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .watch{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:clamp(18px,3vw,32px);align-items:start}
 .player-box{position:relative;aspect-ratio:16/9;background:#2b2824;border-radius:10px;overflow:hidden}
 .player-box iframe,.player-box > div{position:absolute;inset:0;width:100%;height:100%;border:0}
-.now h2{font-family:var(--serif);font-weight:500;font-size:clamp(1.25rem,2.4vw,1.6rem);margin-top:16px;line-height:1.35}
+.now .player-box + .line{margin-top:14px}   /* 플레이어 아래 차시 제목은 없앰(오른쪽 목록에 있음 — 2026-10-04 써니님) */
 .now .line{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:.8rem;color:var(--muted);margin-top:6px}
 .now .bar{margin-top:10px}
 .notice{margin-top:14px;font-size:.78rem;color:var(--muted);background:var(--paper);border:1px dashed var(--line);border-radius:8px;padding:10px 14px}
@@ -101,7 +101,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* ---------- 강좌 상세 (누구나 · 수강권 없을 때) ---------- */
 .detail{max-width:1040px;margin:0 auto}
 .d-top{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(24px,4vw,52px);align-items:start}
-.d-thumb{aspect-ratio:4/3;border-radius:12px;background:var(--line) center/cover no-repeat}
+.d-thumb{aspect-ratio:16/9;border-radius:12px;background:var(--line) center/cover no-repeat}
 .d-info h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.05rem,1.6vw,1.15rem);line-height:1.4;margin-top:8px}   /* 예전 크기의 절반(2026-10-03 써니님) */
 .d-sum{color:var(--ink-soft);margin-top:10px;font-size:.95rem}
 .d-facts{margin-top:22px;border-top:1px solid var(--line)}
@@ -121,6 +121,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .drop-txt{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:.88rem}
 .drop + div{margin-top:8px}
 #cFiles{display:flex;flex-direction:column;gap:22px}
+/* 강의실 → 강좌 상세로 돌아가기 */
+.back-link{display:inline-block;margin-bottom:12px;font-size:.8rem;color:var(--muted)}
+.back-link:hover{color:var(--pink-deep)}
 .pat-list{list-style:none;margin:8px 0 0;padding:0;border-top:1px solid var(--line)}
 .pat-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.88rem}
 .pat-list li > span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -149,7 +152,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 .d-outline .dur{font-size:.8rem;color:var(--muted)}
 @media(max-width:760px){
   .d-top{grid-template-columns:1fr}
-  .d-thumb{aspect-ratio:16/10}
 }
 
 /* ---------- 관리자 ---------- */
