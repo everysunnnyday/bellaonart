@@ -6,16 +6,16 @@
 import {
   db, CONFIGURED, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, where, orderBy,
   writeBatch, serverTimestamp, Timestamp,
-} from "./firebase.js";
+} from "./firebase.js?v=6";
 import {
   initShell, watchUser, esc, $, toEnr, tsMs, loadPolicy, login, toast, dialog, notConfiguredHtml,
-} from "./common.js";
+} from "./common.js?v=6";
 import {
-  DEFAULT_POLICY, enrollState, fmtLeft, courseStat, fmtDur, fmtPct, fmtDate,
+  DEFAULT_POLICY, enrollState, fmtLeft, fmtPeriod, isFreePrice, courseStat, fmtDur, fmtPct, fmtDate,
   kstDateStr, startOfKstDay, endOfKstDay, defaultEndStr, courseDays, CODE_RE, normCode,
-} from "./core.js";
-import { parseYouTubeId, probeVideo } from "./youtube.js";
-import { CATEGORIES } from "./course-list.js";   // 카테고리 3개는 이 한 곳에 고정
+} from "./core.js?v=6";
+import { parseYouTubeId, probeVideo } from "./youtube.js?v=6";
+import { CATEGORIES } from "./course-list.js?v=6";   // 카테고리 3개는 이 한 곳에 고정
 
 initShell({ active: "admin", kakao: false });
 const root = $("#admin");
@@ -145,7 +145,7 @@ function renderCourses() {
 
 async function renderCourseEditor() {
   const isNew = S.selCourse === "new";
-  const c = isNew ? { id: "", title: "", summary: "", description: "", priceLabel: "", defaultDays: S.policy.defaultDays, thumb: "", published: false }
+  const c = isNew ? { id: "", title: "", summary: "", description: "", priceLabel: "", materials: "", defaultDays: S.policy.defaultDays, thumb: "", published: false }
     : S.courses.find((x) => x.id === S.selCourse);
   const box = $("#cEdit");
   box.innerHTML = `<div class="card-box">
@@ -156,9 +156,12 @@ async function renderCourseEditor() {
       <label class="field">한 줄 소개<input name="summary" value="${esc(c.summary)}"></label>
       <label class="field">상세 소개 (수강 전 안내 화면에 표시)<textarea name="description">${esc(c.description)}</textarea></label>
       <div class="row">
-        <label class="field">표시 가격<input name="priceLabel" value="${esc(c.priceLabel)}" placeholder="예: 150,000원"></label>
-        <label class="field">기본 수강기간(일)<input name="defaultDays" type="number" min="1" value="${esc(c.defaultDays ?? S.policy.defaultDays)}"></label>
+        <label class="field">표시 가격<input name="priceLabel" value="${esc(c.priceLabel)}" placeholder="예: 150,000원">
+          <span class="hint"><b>0 · 0원 · 무료</b> 로 쓰면 무료 강좌 — 회원 누구나 강좌를 열면 바로 수강(기간 제한 없음), 화면엔 "무료"</span></label>
+        <label class="field">기본 수강기간(일)<input name="defaultDays" type="number" min="1" value="${esc(c.defaultDays ?? S.policy.defaultDays)}">
+          <span class="hint">무료 강좌는 쓰이지 않음</span></label>
       </div>
+      <label class="field">준비물 (강좌 상세에 표시 · 선택)<input name="materials" value="${esc(c.materials || "")}" placeholder="예: 주름지, 물감, 붓, 물, 목공풀"></label>
       <div class="field">카테고리 (여러 개 고를 수 있음)
         <div class="cat-checks">${CATEGORIES.map((k) => `<label class="check"><input type="checkbox" name="cat" value="${k.id}" ${(c.categories || []).includes(k.id) ? "checked" : ""}> ${esc(k.title)}</label>`).join("")}</div>
         <span class="hint">고른 카테고리의 강의 목록에 나옵니다. 메인·Workshop 카테고리 카드는 공개 강좌가 하나라도 있으면 목록으로, 없으면 '준비 중'으로 연결됩니다.</span></div>
@@ -182,7 +185,7 @@ async function saveCourse(isNew) {
   const id = isNew ? f.id.value.trim() : S.selCourse;
   const data = {
     title: f.title.value.trim(), summary: f.summary.value.trim(), description: f.description.value.trim(),
-    priceLabel: f.priceLabel.value.trim(), thumb: f.thumb.value.trim(),
+    priceLabel: f.priceLabel.value.trim(), materials: f.materials.value.trim(), thumb: f.thumb.value.trim(),
     defaultDays: parseInt(f.defaultDays.value, 10),
     categories: [...f.querySelectorAll("[name=cat]:checked")].map((x) => x.value),
     published: f.published.checked, updatedAt: serverTimestamp(),
@@ -362,7 +365,7 @@ function renderMemberDetail() {
     <tbody>${mine.map((e) => {
       const st = enrollState(e, now);
       return `<tr data-e="${esc(e.id)}"><td>${esc(courseTitle(e.courseId))}</td>
-        <td class="per">${fmtDate(e.startAt)} ~ ${fmtDate(e.endAt)}${st === "active" ? ` <span class="hint">(${fmtLeft(e.endAt, now)})</span>` : ""}</td>
+        <td class="per">${fmtPeriod(e)}${st === "active" ? ` <span class="hint">(${fmtLeft(e.endAt, now)})</span>` : ""}</td>
         <td><span class="badge ${st === "active" ? "active" : ""}">${STATE_TXT[st]}</span></td>
         <td>${e.extendedCount ? `사용 (${fmtDate(e.extendedAt)})` : "-"}</td>
         <td class="hint">${e.source === "code" ? `코드 ${esc(e.code || "")}` : `${e.source === "payment" ? "결제" : "관리자"} ${esc(e.grantedBy || "")}`}</td>
@@ -375,7 +378,7 @@ function renderMemberDetail() {
     ${firstC ? `<div class="form"><div class="row">
       <label class="field">강좌<select id="gC">${S.courses.map((c) => `<option value="${esc(c.id)}">${esc(c.title)}</option>`).join("")}</select></label>
       <label class="field">시작일<input type="date" id="gS" value="${today()}"></label>
-      <label class="field">종료일<input type="date" id="gE"></label>
+      <label class="field">종료일 (비우면 기간 제한 없음)<input type="date" id="gE"></label>
       <label class="field">메모<input id="gM" placeholder="예: 10/2 계좌이체 확인"></label>
     </div><div><button type="button" class="btn solid sm" data-act="grant">수강권 부여</button>
       <span class="hint" id="gHint"></span></div></div>` : `<p class="hint">먼저 강좌를 만드세요.</p>`}
@@ -383,6 +386,11 @@ function renderMemberDetail() {
 
   const setEnd = () => {
     const c = S.courses.find((x) => x.id === $("#gC").value);
+    if (isFreePrice(c?.priceLabel)) {   // 무료 강좌 = 기간 제한 없음(회원이 강좌를 열면 자동으로도 받음)
+      $("#gE").value = "";
+      $("#gHint").textContent = " 무료 강좌 — 기간 제한 없음 (회원이 강좌를 열면 자동으로도 받습니다)";
+      return;
+    }
     const days = courseDays(c, S.policy);
     $("#gE").value = defaultEndStr($("#gS").value || today(), days);
     $("#gHint").textContent = ` 기본 ${days}일 (시작일 포함)`;
@@ -399,16 +407,17 @@ function renderMemberDetail() {
       if (act === "close") { S.selUser = null; $("#mDetail").innerHTML = ""; return; }
       if (act === "grant") return await grant();
       if (act === "edit") {
-        tr.querySelector(".per").innerHTML = `<input type="date" class="es" value="${kstDateStr(e.startAt)}"> ~ <input type="date" class="ee" value="${kstDateStr(e.endAt)}">
-          <button type="button" class="btn sm solid" data-act="saveP">저장</button> <button type="button" class="btn sm" data-act="cancelP">취소</button>`;
+        tr.querySelector(".per").innerHTML = `<input type="date" class="es" value="${kstDateStr(e.startAt)}"> ~ <input type="date" class="ee" value="${e.endAt == null ? "" : kstDateStr(e.endAt)}">
+          <button type="button" class="btn sm solid" data-act="saveP">저장</button> <button type="button" class="btn sm" data-act="cancelP">취소</button>
+          <span class="hint">종료일을 비우면 기간 제한 없음</span>`;
         return;
       }
       if (act === "cancelP") return renderMemberDetail();
       if (act === "saveP") {
         const s = tr.querySelector(".es").value, en = tr.querySelector(".ee").value;
-        if (!s || !en || en < s) return toast("기간을 확인해 주세요(종료일이 시작일보다 빠를 수 없음).");
+        if (!s || (en && en < s)) return toast("기간을 확인해 주세요(종료일이 시작일보다 빠를 수 없음).");
         await updateDoc(doc(db, "enrollments", e.id), {
-          startAt: Timestamp.fromMillis(startOfKstDay(s)), endAt: Timestamp.fromMillis(endOfKstDay(en)),
+          startAt: Timestamp.fromMillis(startOfKstDay(s)), endAt: en ? Timestamp.fromMillis(endOfKstDay(en)) : null,
         });
         toast("기간을 바꿨습니다.");
       }
@@ -430,18 +439,18 @@ function renderMemberDetail() {
 
 async function grant() {
   const uid = S.selUser, cid = $("#gC").value, s = $("#gS").value, en = $("#gE").value, memo = $("#gM").value.trim();
-  if (!s || !en || en < s) return toast("기간을 확인해 주세요(종료일이 시작일보다 빠를 수 없음).");
+  if (!s || (en && en < s)) return toast("기간을 확인해 주세요(종료일이 시작일보다 빠를 수 없음).");
   const old = S.enrs.find((e) => e.uid === uid && e.courseId === cid);
   const st = enrollState(old, Date.now());
   if (st === "active" || st === "upcoming") {
     const ok = await dialog({ title: "이미 수강권이 있습니다",
-      body: `현재 ${fmtDate(old.startAt)} ~ ${fmtDate(old.endAt)} (${STATE_TXT[st]})<br>새로 부여하면 기간이 바뀌고 <b>연장 기회도 다시 생깁니다.</b><br>
+      body: `현재 ${fmtPeriod(old)} (${STATE_TXT[st]})<br>새로 부여하면 기간이 바뀌고 <b>연장 기회도 다시 생깁니다.</b><br>
         <span class="small muted">기간만 바꾸려면 [기간 수정]을 쓰세요.</span>`, ok: "새로 부여" });
     if (!ok) return;
   }
   await setDoc(doc(db, "enrollments", `${uid}_${cid}`), {
     uid, courseId: cid, status: "active",
-    startAt: Timestamp.fromMillis(startOfKstDay(s)), endAt: Timestamp.fromMillis(endOfKstDay(en)),
+    startAt: Timestamp.fromMillis(startOfKstDay(s)), endAt: en ? Timestamp.fromMillis(endOfKstDay(en)) : null,   // 비움 = 기간 제한 없음
     extendedCount: 0, source: "admin", grantedBy: S.me.email, grantedAt: serverTimestamp(), memo,
   });
   toast("수강권을 부여했습니다.");
@@ -484,7 +493,7 @@ async function renderStatus() {
     <tbody>${rows.map((r) => `<tr>
       <td>${esc(r.u.name || "-")}</td><td>${esc(r.u.email)}</td>
       <td><span class="badge ${r.st === "active" ? "active" : ""}">${STATE_TXT[r.st]}</span></td>
-      <td>${fmtDate(r.e.startAt)} ~ ${fmtDate(r.e.endAt)}</td>
+      <td>${fmtPeriod(r.e)}</td>
       <td>${r.st === "active" ? fmtLeft(r.e.endAt, now) : "-"}</td>
       <td>${r.e.extendedCount ? "사용" : "-"}</td>
       <td><span class="bar ${r.cs.complete ? "done" : ""}"><i style="width:${(r.cs.ratio * 100).toFixed(1)}%"></i></span>${fmtPct(r.cs.ratio)}</td>

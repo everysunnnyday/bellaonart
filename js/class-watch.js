@@ -1,17 +1,19 @@
 // 강좌 상세 · 강의실 (/class/watch.html?c=코스ID[&l=차시ID])
 // - 누구나: 강좌 상세(소개·가격·목차·수강 기간) — 목차는 공개 칸(lessons)만 읽는다(영상 주소 없음)
 // - 수강권 있는 회원: 강의실(영상 시청 · 실제 시청 구간 기록 · 수강률) — 영상 주소(videos)는 이때만 읽힌다
-// - 수강권 없는 회원: 문의 버튼 + 수강 코드 입력(서버 함수 redeemCode 가 확인 후 수강권 생성)
+// - 수강권 없는 회원: [수강 신청] 영역(카카오톡) + [수강 코드] 영역(서버 함수 redeemCode 가 확인 후 수강권 생성) — 두 영역을 나눠 보여 줌
+// - 무료 강좌(수강료 0·0원·무료): 인증된 회원이 열면 수강권(기간 제한 없음)을 자동으로 받고 바로 강의실 — claimFree
 import {
-  db, CONFIGURED, doc, getDoc, getDocs, setDoc, collection, query, orderBy, serverTimestamp, redeemCode,
-} from "./firebase.js";
+  db, CONFIGURED, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, orderBy, serverTimestamp, Timestamp, redeemCode,
+} from "./firebase.js?v=6";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast,
   notConfiguredHtml, KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate,
-} from "./common.js";
-import { enrollState, fmtLeft, lessonStat, courseStat, fmtDur, fmtPct, fmtDate, courseDays, fmtPrice } from "./core.js";
-import { LessonTracker } from "./youtube.js";
-import { t, tv, onLangChange } from "./i18n.js";
+} from "./common.js?v=6";
+import { enrollState, fmtLeft, fmtPeriod, lessonStat, courseStat, fmtDur, fmtPct, fmtDate, courseDays, fmtPrice, isFreePrice,
+  startOfKstDay, kstDateStr } from "./core.js?v=6";
+import { LessonTracker } from "./youtube.js?v=6";
+import { t, tv, onLangChange } from "./i18n.js?v=6";
 
 initShell({ active: "workshop" });
 const app = $("#app");
@@ -30,6 +32,8 @@ function notice(msg, btns = "") {
 const wsBtn = () => `<a class="btn" href="/workshop.html">Workshop</a>`;
 // 수강 문의는 카카오톡 하나만(전화번호는 노출하지 않음 — 2026-10-03 써니님)
 const askBtns = () => `<a class="btn solid" href="${KAKAO_CHANNEL}" target="_blank" rel="noopener">${t("카카오톡으로 수강 문의", "cd.askKakao")}</a>`;
+// 수강 신청 영역의 버튼(2026-10-04 써니님) — 문의(오류·회수 안내)와 신청을 구분
+const applyBtn = () => `<a class="btn solid" href="${KAKAO_CHANNEL}" target="_blank" rel="noopener">${t("카카오톡으로 수강 신청", "cd.applyKakao")}</a>`;
 
 // 수강 코드 결과 안내 (사유 = firebase/functions/redeem.js)
 const REDEEM_MSG = {
@@ -54,10 +58,13 @@ function renderDetail(state) {
   detailState = state;
   const total = lessons.reduce((s, l) => s + (l.durationSec || 0), 0);
   const days = policy && courseDays(course, policy);
+  const free = isFreePrice(course.priceLabel);
   const facts = [
-    course.priceLabel ? [t("수강료", "cd.price"), esc(fmtPrice(course.priceLabel))] : null,
+    course.priceLabel ? [t("수강료", "cd.price"), esc(fmtPrice(course.priceLabel, t("무료", "cd.free")))] : null,
     lessons.length ? [t("구성", "cd.parts"), tv("{n}강 · 총 {d}", "cd.partsVal", { n: lessons.length, d: fmtDur(total) })] : null,
-    days ? [t("수강 기간", "cd.period"), tv("{d}일 · 1회 무료 연장 +{e}일", "cd.periodVal", { d: days, e: policy.extendDays })] : null,
+    free ? [t("수강 기간", "cd.period"), t("기간 제한 없음", "cd.periodFree")]
+      : days ? [t("수강 기간", "cd.period"), tv("{d}일 · 1회 무료 연장 +{e}일", "cd.periodVal", { d: days, e: policy.extendDays })] : null,
+    course.materials ? [t("준비물", "cd.materials"), esc(course.materials)] : null,   // 관리자 입력(강좌마다)
   ].filter(Boolean);
   const desc = course.description || "";
 
@@ -82,27 +89,33 @@ function renderDetail(state) {
 
   const act = $("#act");
   if (state === "login") {
-    act.innerHTML = `<p class="d-msg">${t("로그인 후 수강 신청과 수강 코드 입력을 할 수 있습니다.", "cd.needLogin")}</p>
+    act.innerHTML = `<p class="d-msg">${free ? t("회원이면 누구나 무료로 수강할 수 있습니다. 로그인해 주세요.", "cd.freeLogin")
+      : t("로그인 후 수강 신청과 수강 코드 입력을 할 수 있습니다.", "cd.needLogin")}</p>
       <div class="btns"><button type="button" class="btn solid" id="loginBtn">${t("로그인 / 회원가입", "cd.login")}</button></div>`;
     $("#loginBtn").onclick = () => login();
     return;
   }
   if (state === "verify") { act.innerHTML = verifyGateHtml(me.user); bindVerifyGate(act, me.user); return; }
-  const msg = {
-    none: t("입금을 확인하면 수강권을 드립니다. 카카오톡으로 신청해 주세요.", "cd.none"),
-    expired: tv("수강 기간이 끝났습니다. (종료일 {d})", "cd.expired", { d: fmtDate(enr?.endAt) }),
-    upcoming: tv("수강 시작일은 {d} 입니다.", "cd.upcoming", { d: fmtDate(enr?.startAt) }),
-    revoked: t("수강권이 없습니다. 문의해 주세요.", "cd.revoked"),
-  }[state];
-  const withCode = state === "none" || state === "expired";
-  act.innerHTML = `<p class="d-msg">${msg}</p>
-    ${state === "upcoming" ? "" : `<div class="btns">${askBtns()}</div>`}
-    ${withCode ? `<form class="code-form" id="codeForm" autocomplete="off">
-      <label for="codeIn">${t("수강 코드가 있으신가요?", "cd.codeQ")}</label>
+  // 시작 전 · 회수 = 안내 한 줄(+ 회수는 문의 버튼)
+  if (state === "upcoming" || state === "revoked") {
+    act.innerHTML = state === "upcoming"
+      ? `<p class="d-msg">${tv("수강 시작일은 {d} 입니다.", "cd.upcoming", { d: fmtDate(enr?.startAt) })}</p>`
+      : `<p class="d-msg">${t("수강권이 없습니다. 문의해 주세요.", "cd.revoked")}</p><div class="btns">${askBtns()}</div>`;
+    return;
+  }
+  // 수강권 없음 · 기간 끝남 = ① 수강 신청(카카오톡) ② 수강 코드 등록 — 두 영역을 나눈다(2026-10-04 써니님 첨부 3)
+  act.innerHTML = `${state === "expired" ? `<p class="d-msg d-expired">${tv("수강 기간이 끝났습니다. (종료일 {d})", "cd.expired", { d: fmtDate(enr?.endAt) })}</p>` : ""}
+    <div class="d-apply">
+      <p class="d-msg">${t("카카오톡으로 신청하시면 결제 방법을 안내해드립니다.", "cd.apply1")}<br>${t("입금 확인 후 수강 코드를 보내드립니다.", "cd.apply2")}</p>
+      <div class="btns">${applyBtn()}</div>
+    </div>
+    <form class="code-form" id="codeForm" autocomplete="off">
+      <p class="code-q">${t("이미 수강 코드를 받으셨나요?", "cd.codeQ")}</p>
+      <label for="codeIn">${t("코드를 등록해 수강을 시작하세요.", "cd.codeSub")}</label>
       <div class="code-row"><input id="codeIn" name="code" maxlength="30" placeholder="${t("수강 코드 입력", "cd.codePh")}">
-        <button type="submit" class="btn sage">${t("등록", "cd.codeBtn")}</button></div>
-      <p class="code-msg" id="codeMsg" role="status"></p></form>` : ""}`;
-  if (withCode) $("#codeForm").onsubmit = onRedeem;
+        <button type="submit" class="btn sage">${t("코드 등록", "cd.codeBtn")}</button></div>
+      <p class="code-msg" id="codeMsg" role="status"></p></form>`;
+  $("#codeForm").onsubmit = onRedeem;
 }
 
 async function onRedeem(e) {
@@ -143,7 +156,7 @@ function renderRoom() {
       <div class="sum"><span class="small muted">수강률</span><b id="cPct">0%</b></div>
       <div class="bar" id="cBar"><i></i></div>
       <div class="small muted" id="cMeta"></div>
-      ${enr ? `<div class="small muted">수강 기간 ${fmtDate(enr.startAt)} ~ ${fmtDate(enr.endAt)} · ${fmtLeft(enr.endAt, now)}</div>` : ""}
+      ${enr ? `<div class="small muted">수강 기간 ${fmtPeriod(enr)} · ${fmtLeft(enr.endAt, now)}</div>` : ""}
       <ol class="lessons" id="lList"></ol>
     </aside>
   </div>`;
@@ -227,6 +240,26 @@ async function openLesson(lid) {
   await tracker.start();
 }
 
+// ---------- 무료 강좌 수강권 자동 받기 (2026-10-04 써니님: 0원 강좌는 회원 누구나 · 수강 기간 없음) ----------
+// 인증된 회원이 공개된 무료 강좌를 열면: 수강권 없음 → 새로 받음 / 기간제·만료·시작 전 → 기간 제한 없음으로 바꿈 / 회수 → 그대로(문의)
+// 허용 조건은 보안 규칙(firestore.rules enrollments 의 무료 강좌 create·update)이 최종 판정. 받았으면 true.
+let claimTried = false;   // 한 페이지에서 한 번만(저장이 막혀도 다시 시도하며 맴돌지 않게)
+async function claimFree() {
+  if (claimTried || !me || !course?.published || !isFreePrice(course.priceLabel)) return false;
+  if (enr && (enr.status !== "active" || enr.endAt == null)) return false;   // 회수됨 · 이미 기간 제한 없음
+  claimTried = true;
+  const ref = doc(db, "enrollments", `${me.uid}_${cid}`);
+  // 시작 = 오늘 0시(한국시간) — 수강 코드·관리자 부여와 같은 달력 기준(휴대폰 시계가 조금 늦어도 "시작 전"이 되지 않게)
+  const today0 = Timestamp.fromMillis(startOfKstDay(kstDateStr(Date.now())));
+  if (!enr) {
+    await setDoc(ref, { uid: me.uid, courseId: cid, status: "active", startAt: today0, endAt: null,
+      extendedCount: 0, source: "free", grantedAt: serverTimestamp() });
+  } else {
+    await updateDoc(ref, { endAt: null, freeAt: serverTimestamp(), ...(enr.startAt > Date.now() ? { startAt: today0 } : {}) });
+  }
+  return true;
+}
+
 async function enter() {
   if (tracker) { await tracker.destroy(); tracker = null; }
   if (!cid) return notice(t("강좌 주소가 올바르지 않습니다.", "cd.badUrl"), wsBtn());
@@ -250,6 +283,7 @@ async function enter() {
 
   const es = await getDoc(doc(db, "enrollments", `${me.uid}_${cid}`)).catch(() => null);
   enr = es?.exists() ? toEnr(es.id, es.data()) : null;
+  if (await claimFree()) return enter();   // 무료 강좌 → 수강권을 받았으면 처음부터 다시(이제 수강 중)
   const state = enrollState(enr, Date.now());
   preview = state !== "active" && me.isAdmin;
   if (state !== "active" && !preview) return renderDetail(state);

@@ -4,15 +4,15 @@
 // - 강좌는 관리자 페이지에서 카테고리를 여러 개 고를 수 있다(courses.categories = ["paper-flower", …])
 // - 카드를 누르면: 그 카테고리에 공개 강좌가 있으면 강의 목록(/workshop.html?cat=ID), 없으면 '준비 중' 페이지
 // - 강의 목록의 강좌 카드 그림 = 1차시 유튜브 썸네일(서버가 대신 가져옴 — common.js thumbOf)
-import { db, collection, query, where, getDocs } from "./firebase.js";
-import { watchUser, esc, toEnr, initReveal, thumbOf } from "./common.js";
-import { enrollState, fmtLeft, fmtPrice } from "./core.js";
-import { t, tv, onLangChange } from "./i18n.js";
+import { db, collection, query, where, getDocs } from "./firebase.js?v=6";
+import { watchUser, esc, toEnr, initReveal, thumbOf } from "./common.js?v=6";
+import { enrollState, fmtLeft, fmtPrice } from "./core.js?v=6";
+import { t, tv, onLangChange } from "./i18n.js?v=6";
 
 // intro = 카테고리 강의 목록 위에 나오는 소개(사진 왼쪽 · 글 오른쪽). 한국어는 여기, 영문은 i18n.js(cat.<id>.*)
 //         소개가 없는 카테고리는 제목·목록만 보인다. 문단은 body 배열 한 칸 = 한 문단.
 export const CATEGORIES = [
-  { id: "floral-art-design", title: "Floral Art & Design", img: "/images/class/MASTER.png" },
+  { id: "floral-art-design", title: "Floral Art & Design", img: "/images/class/MASTER.webp" },
   { id: "paper-flower", title: "Paper Flower", img: "/images/class/paper-flower.jpg",
     intro: {   // 2026-10-04 써니님 제공 글
       img: "/images/class/paper-flower-intro.webp",
@@ -25,7 +25,7 @@ export const CATEGORIES = [
         "벨라온아트의 클래스에서 꽃을 바라보는 새로운 시선과 직접 만드는 즐거움을 만나보세요.",
       ],
     } },
-  { id: "signature-coloring", title: "Signature Coloring", img: "/images/class/coloring.png" },
+  { id: "signature-coloring", title: "Signature Coloring", img: "/images/class/coloring.webp" },
 ];
 
 // 카테고리 소개 HTML(소개가 없으면 빈 글자). 한/영은 i18n.js 의 cat.<id>.head / cat.<id>.p1… 키
@@ -49,7 +49,7 @@ let courses = null;      // 공개 강좌(관리자 순서)
 let myEnr = {};          // courseId → 내 수강권
 let started = false;
 
-const leftText = (endAt, now) => fmtLeft(endAt, now, { today: t("오늘 종료", "left.today"), days: t("{d}일 남음", "left.days") });
+const leftText = (endAt, now) => fmtLeft(endAt, now, { today: t("오늘 종료", "left.today"), days: t("{d}일 남음", "left.days"), none: t("기간 제한 없음", "left.none") });
 const delay = (i) => `transition-delay:${Math.min(i, 6) * 0.07}s`;
 
 // ---------- 카테고리 카드 3장 ----------
@@ -74,7 +74,7 @@ function courseInfo(c, now) {
   const st = enrollState(e, now);
   const badge = st === "active" ? `<span class="badge">${tv("수강 중 · {left}", "ws.enrolled", { left: leftText(e.endAt, now) })}</span>`
     : st === "expired" ? `<span class="badge off">${t("기간 종료", "ws.expired")}</span>` : "";
-  return `<p class="meta">${esc(meta)}${c.priceLabel ? ` · ${esc(fmtPrice(c.priceLabel))}` : ""}</p>${badge}`;
+  return `<p class="meta">${esc(meta)}${c.priceLabel ? ` · ${esc(fmtPrice(c.priceLabel, t("무료", "cd.free")))}` : ""}</p>${badge}`;
 }
 function listHtml(shown) {
   if (!courses) return `<div class="empty">${t("강좌를 불러오는 중…", "ws.loading")}</div>`;

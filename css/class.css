@@ -112,8 +112,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 .d-act .d-msg{color:var(--ink-soft);font-size:.9rem}
 .d-act .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .d-act .empty{padding:18px 0;text-align:left}   /* 이메일 인증 안내를 상세 안에 넣을 때 */
-.code-form{margin-top:22px;padding-top:18px;border-top:1px dashed var(--line)}
-.code-form label{display:block;font-size:.86rem;color:var(--ink-soft);margin-bottom:8px}
+/* 수강 신청(카카오톡) ↔ 수강 코드 등록 — 두 영역을 실선으로 나눈다(2026-10-04 써니님 첨부 3) */
+.d-act .d-expired{margin-bottom:12px}
+.code-form{margin-top:26px;padding-top:22px;border-top:1px solid var(--line)}
+.code-form .code-q{font-size:.95rem;font-weight:600;color:var(--ink);margin-bottom:4px}
+.code-form label{display:block;font-size:.86rem;color:var(--ink-soft);margin-bottom:10px}
 .code-row{display:flex;gap:8px}
 .code-row input{flex:1;min-width:0;font:inherit;font-size:.92rem;padding:10px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink)}
 .code-row input:focus{outline:none;border-color:var(--sage-deep)}

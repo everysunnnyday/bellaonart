@@ -32,9 +32,15 @@ export const courseDays = (course, policy) => course?.defaultDays || policy.defa
 // 강좌 썸네일을 못 가져올 때 쓰는 기본 그림 — 사이트(common.js thumbOf)·서버 함수(courseThumbImg)가 함께 쓴다
 export const DEFAULT_THUMB = "/images/class/paper-flower.jpg";
 
-// 수강료 표시 — 관리자가 쓴 그대로 두되 4자리 이상 숫자에 천 단위 쉼표, 숫자만 썼으면 "원"을 붙인다
-// 예: "30000" → "30,000원" · "150000원" → "150,000원" · "150,000원" → 그대로 · "무료" → 그대로
-export const fmtPrice = (s) => {
+// 무료 강좌 = 수강료 칸이 "0" · "0원" · "무료" (2026-10-04 써니님: 0원 강좌는 회원 누구나 · 수강 기간 없음)
+// ⚠ 보안 규칙(firestore.rules isFreeCourse)에 같은 규칙이 한 번 더 적혀 있다(규칙은 이 파일을 못 불러옴) — 바꾸면 둘 다
+export const FREE_PRICE_RE = /^ *(0+ *원?|무료) *$/;
+export const isFreePrice = (s) => FREE_PRICE_RE.test(String(s ?? ""));
+
+// 수강료 표시 — 관리자가 쓴 그대로 두되 4자리 이상 숫자에 천 단위 쉼표, 숫자만 썼으면 "원"을 붙인다 · 무료 강좌는 freeLabel
+// 예: "30000" → "30,000원" · "150000원" → "150,000원" · "150,000원" → 그대로 · "0"·"0원"·"무료" → "무료"
+export const fmtPrice = (s, freeLabel = "무료") => {
+  if (isFreePrice(s)) return freeLabel;
   const v = String(s ?? "").trim().replace(/\d{4,}/g, (d) => d.replace(/\B(?=(\d{3})+(?!\d))/g, ","));
   return /^\d[\d,]*$/.test(v) ? v + "원" : v;
 };
@@ -46,31 +52,43 @@ export const normCode = (s) => String(s ?? "").trim().toLowerCase();
 // 남은 일수 = 오늘 포함 (달력 기준). 종료일 당일 = 1, 시작일 = 전체 일수.
 // 화면 표시·리마인드 판정이 모두 이 정의 하나를 쓴다.
 export const daysLeft = (endMs, nowMs) => kstDayNo(endMs) - kstDayNo(nowMs) + 1;
+
+// 종료일(endAt)이 비어 있는(null) 수강권 = 기간 제한 없음 — 무료 강좌 수강권 · 관리자가 종료일을 비워 부여한 것
+// 남은 일수·만료·연장·리마인드 판정에서 모두 빠진다(아래 함수들)
+export const noEnd = (e) => e != null && e.endAt == null;
+
 // 화면 표시 문구 (모든 페이지 공통). 영어 화면은 labels 로 문구만 바꿔 넘긴다({d} = 일수)
-export const fmtLeft = (endMs, nowMs, labels = { today: "오늘 종료", days: "{d}일 남음" }) => {
+export const fmtLeft = (endMs, nowMs, labels = { today: "오늘 종료", days: "{d}일 남음", none: "기간 제한 없음" }) => {
+  if (endMs == null) return labels.none || "기간 제한 없음";
   const d = daysLeft(endMs, nowMs);
   return d <= 1 ? labels.today : labels.days.replace("{d}", d);
 };
+// 수강 기간 표시: "2026.10.04 ~ 2026.12.02" · 종료일 없으면 "2026.10.04 ~"
+export const fmtPeriod = (e) => `${fmtDate(e.startAt)} ~${e.endAt == null ? "" : " " + fmtDate(e.endAt)}`;
+// 정렬용 종료 시각(종료일 없음 = 가장 늦음)
+export const endSortKey = (e) => (e.endAt == null ? Number.MAX_SAFE_INTEGER : e.endAt);
 
-// 수강권 상태. e = { status, startAt, endAt, extendedCount } (시각은 ms 숫자)
+// 수강권 상태. e = { status, startAt, endAt, extendedCount } (시각은 ms 숫자, endAt null = 기간 제한 없음)
 export function enrollState(e, now) {
   if (!e) return "none";
   if (e.status !== "active") return "revoked";
   if (now < e.startAt) return "upcoming";
-  if (now > e.endAt) return "expired";
+  if (e.endAt != null && now > e.endAt) return "expired";
   return "active";
 }
 
-// 연장 가능 = 수강 중(시작~종료 사이)이면 언제든 + 아직 연장 안 함 (D17: 상시 1회)
+// 연장 가능 = 수강 중(시작~종료 사이)이면 언제든 + 아직 연장 안 함 (D17: 상시 1회) · 기간 제한 없음은 연장할 것이 없음
 // (보안 규칙의 연장 조건과 같은 정의 — firestore.rules enrollments 참고)
 export function canExtend(e, now) {
   return enrollState(e, now) === "active"
+    && !noEnd(e)
     && (e.extendedCount || 0) === 0;
 }
 
-// 리마인드 메일 대상 = 수강 중 + remindDays일 이하 남음 + 이 종료일 기준으로 아직 안 보냄
+// 리마인드 메일 대상 = 수강 중 + remindDays일 이하 남음 + 이 종료일 기준으로 아직 안 보냄 · 기간 제한 없음은 제외
 export function needsReminder(e, policy, now) {
   return enrollState(e, now) === "active"
+    && !noEnd(e)
     && daysLeft(e.endAt, now) <= policy.remindDays
     && e.reminderSentFor !== e.endAt;
 }

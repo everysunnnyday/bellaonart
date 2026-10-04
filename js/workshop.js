@@ -2,9 +2,9 @@
 //  - 기본: 카테고리 카드 3장(메인과 같은 사진) + 카드 아래 "강좌 N개 / 준비 중"
 //  - ?cat=paper-flower 등: 그 카테고리의 강의 목록(1차시 유튜브 썸네일 · 강좌 정보 · 내 수강 상태)
 // 카드·목록 코드는 js/course-list.js 한 곳(메인·마이페이지와 공용)
-import { initShell, initReveal, $ } from "./common.js";
-import { mountCategories, mountCategoryList, categoryOf, introHtml } from "./course-list.js";
-import { t, onLangChange } from "./i18n.js";
+import { initShell, initReveal, $ } from "./common.js?v=6";
+import { mountCategories, mountCategoryList, categoryOf, introHtml } from "./course-list.js?v=6";
+import { t, onLangChange } from "./i18n.js?v=6";
 
 initShell({ active: "workshop" });
 const cat = categoryOf(new URLSearchParams(location.search).get("cat"));

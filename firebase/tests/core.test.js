@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   DAY, DEFAULT_POLICY as P, kstDateStr, startOfKstDay, endOfKstDay, defaultEndStr, daysLeft, fmtLeft,
   enrollState, canExtend, needsReminder, addSegment, watchedSec, isContinuous, lessonStat, courseStat, fmtDur,
-  fmtPrice,
+  fmtPrice, isFreePrice, fmtPeriod, endSortKey, noEnd,
 } from "../../js/core.js";
 
 const at = (dateStr, hhmm = "09:00") => Date.parse(`${dateStr}T${hhmm}:00+09:00`);
@@ -127,6 +127,36 @@ test("코스 수강률 = 시청 시간 합 ÷ 전체 길이, 전 차시 완료�
   assert.equal(all.ratio, 1);
   assert.equal(courseStat(null, ls, P).ratio, 0);
   assert.equal(courseStat(null, [], P).complete, false);
+});
+
+test("무료 강좌 판정(0·0원·무료) · 수강료 표시 '무료'(영문은 넘긴 글자)", () => {
+  for (const s of ["0", "0원", " 0 원 ", "00", "무료"]) assert.equal(isFreePrice(s), true, s);
+  for (const s of ["", null, undefined, "10", "30000", "0.5", "무료 체험 10,000원", "10원"]) assert.equal(isFreePrice(s), false, String(s));
+  assert.equal(fmtPrice("0"), "무료");
+  assert.equal(fmtPrice("0원", "Free"), "Free");
+  assert.equal(fmtPrice("30000"), "30,000원");
+});
+
+test("기간 제한 없음(종료일 null): 만료·연장·리마인드 없음 · 표시 '기간 제한 없음'", () => {
+  const now = at("2026-10-04");
+  const e = { status: "active", startAt: startOfKstDay("2026-10-04"), endAt: null, extendedCount: 0 };
+  assert.equal(noEnd(e), true);
+  assert.equal(enrollState(e, now), "active");
+  assert.equal(enrollState(e, at("2099-12-31")), "active");
+  assert.equal(enrollState({ ...e, status: "revoked" }, now), "revoked");
+  assert.equal(enrollState({ ...e, startAt: startOfKstDay("2026-10-05") }, now), "upcoming");
+  assert.equal(canExtend(e, now), false);
+  assert.equal(needsReminder(e, P, now), false);
+  assert.equal(fmtLeft(null, now), "기간 제한 없음");
+  assert.equal(fmtLeft(null, now, { today: "x", days: "{d}", none: "No time limit" }), "No time limit");
+  assert.equal(fmtPeriod(e), "2026.10.04 ~");
+  assert.equal(fmtPeriod({ startAt: startOfKstDay("2026-10-04"), endAt: endOfKstDay("2026-12-02") }), "2026.10.04 ~ 2026.12.02");
+  assert.ok(endSortKey(e) > endSortKey({ endAt: endOfKstDay("2099-12-31") }));
+  // 기간 있는 수강권은 그대로
+  const t = { ...e, endAt: endOfKstDay("2026-10-10") };
+  assert.equal(noEnd(t), false);
+  assert.equal(canExtend(t, now), true);
+  assert.equal(needsReminder(t, P, now), true);
 });
 
 test("시간 표시", () => {

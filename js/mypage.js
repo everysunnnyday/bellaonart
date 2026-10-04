@@ -5,13 +5,13 @@ import {
   auth, db, doc, getDoc, getDocs, updateDoc, deleteDoc, collection, query, where, orderBy,
   serverTimestamp, Timestamp, updateProfile, EmailAuthProvider, reauthenticateWithCredential,
   reauthenticateWithPopup, GoogleAuthProvider, updatePassword, deleteUser, signOut,
-} from "./firebase.js";
+} from "./firebase.js?v=6";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast, dialog, authMsg,
   KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate, refreshAuthArea,
-} from "./common.js";
-import { enrollState, canExtend, daysLeft, fmtLeft, courseStat, fmtPct, fmtDate, DAY } from "./core.js";
-import { mountCategories } from "./course-list.js";
+} from "./common.js?v=6";
+import { enrollState, canExtend, daysLeft, fmtLeft, fmtPeriod, endSortKey, noEnd, courseStat, fmtPct, fmtDate, DAY } from "./core.js?v=6";
+import { mountCategories } from "./course-list.js?v=6";
 
 initShell({ active: "mypage", kakao: false });
 const box = $("#my");
@@ -70,7 +70,7 @@ async function loadClass() {
     return { e, state, course, prog, stat, doneCount };
   }));
   const rank = { active: 0, upcoming: 1, expired: 2, revoked: 3 };
-  items.sort((a, b) => rank[a.state] - rank[b.state] || b.e.endAt - a.e.endAt);
+  items.sort((a, b) => rank[a.state] - rank[b.state] || endSortKey(b.e) - endSortKey(a.e));
   if (tab === "class") renderClass();
 }
 
@@ -85,10 +85,9 @@ function renderClass() {
     </div>
     <div class="my-browse"><h2 class="section-title">Workshop</h2><span class="rule"></span><div id="wsList"></div></div>`;
   box.innerHTML = `${items.length ? `<div class="my-list">${items.map(({ e, state, course, prog, stat, doneCount }, i) => {
-    const left = daysLeft(e.endAt, now);
-    const period = `${fmtDate(e.startAt)} ~ ${fmtDate(e.endAt)}`;
+    const period = fmtPeriod(e);   // 기간 제한 없음 = "2026.10.04 ~"
     const leftTxt = state === "active" ? fmtLeft(e.endAt, now) : STATE_TXT[state];
-    const warn = state === "active" && policy && left <= policy.remindDays;
+    const warn = state === "active" && policy && !noEnd(e) && daysLeft(e.endAt, now) <= policy.remindDays;
     const pct = stat ? stat.ratio : null;
     const complete = stat?.complete || !!prog?.completedAt;
     const ext = policy && canExtend(e, now);

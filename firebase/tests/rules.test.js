@@ -195,6 +195,65 @@ test("수강권: 본인 것만 보기 · 회원은 만들기·지우기 불가 �
   await assertFails(updateDoc(doc(stu(), "enrollments/stu_pub"), { endAt: endIn(100) }));
 });
 
+// ---------- 무료 강좌 수강권 (2026-10-04: 0원 강좌는 회원 누구나 · 기간 제한 없음) ----------
+const today0 = () => Timestamp.fromMillis(startOfKstDay(kstDateStr(Date.now())));
+const freeEnr = (uid, cid, o = {}) => ({ uid, courseId: cid, status: "active", startAt: today0(), endAt: null,
+  extendedCount: 0, source: "free", grantedAt: serverTimestamp(), ...o });
+const putFree = () => env.withSecurityRulesDisabled(async (c) => {
+  const db = c.firestore();
+  await setDoc(doc(db, "courses/free"), { title: "무료", published: true, priceLabel: "0" });
+  await setDoc(doc(db, "courses/free2"), { title: "무료2", published: true, priceLabel: "무료" });
+  await setDoc(doc(db, "courses/freehid"), { title: "무료 비공개", published: false, priceLabel: "0" });
+  await setDoc(doc(db, "courses/paid"), { title: "유료", published: true, priceLabel: "30000" });
+  await setDoc(doc(db, "courses/free/videos/l1"), { youtubeId: "o-Jmog-ltFY" });
+  await setDoc(doc(db, "enrollments/stu_free2"), enr("stu", "free2"));                                       // 기간제(무료로 바뀌기 전에 받은 것)
+  await setDoc(doc(db, "enrollments/exp_free2"), enr("exp", "free2", { startAt: startAgo(40), endAt: endIn(-2) }));
+  await setDoc(doc(db, "enrollments/rev_free2"), enr("rev", "free2", { status: "revoked" }));
+  await setDoc(doc(db, "enrollments/fut_free2"), enr("fut", "free2", { startAt: Timestamp.fromMillis(startOfKstDay(kstDateStr(NOW + 3 * DAY))) }));
+});
+test("무료 강좌: 인증된 회원은 본인 수강권(기간 제한 없음)을 직접 받고 영상·진도 가능", async () => {
+  await putFree();
+  await assertSucceeds(setDoc(doc(other(), "enrollments/oth_free"), freeEnr("oth", "free")));
+  await assertSucceeds(getDocs(collection(other(), "courses/free/videos")));      // 종료일 없음 = 유효
+  await assertSucceeds(setDoc(doc(other(), "progress/oth_free"), { uid: "oth", courseId: "free", lessons: {}, updatedAt: serverTimestamp() }));
+  await assertSucceeds(setDoc(doc(stu(), "enrollments/stu_free"), freeEnr("stu", "free")));
+});
+test("무료 강좌 받기 거부: 유료·비공개·미인증·비로그인·남의 것·종료일 넣기·다른 시작일·다른 칸·이미 있음", async () => {
+  await putFree();
+  await assertFails(setDoc(doc(other(), "enrollments/oth_paid"), freeEnr("oth", "paid")));
+  await assertFails(setDoc(doc(other(), "enrollments/oth_freehid"), freeEnr("oth", "freehid")));
+  await assertFails(setDoc(doc(other(), "enrollments/oth_pub"), freeEnr("oth", "pub")));             // 수강료 없음 = 무료 아님
+  await assertFails(setDoc(doc(unv(), "enrollments/unv_free"), freeEnr("unv", "free")));
+  await assertFails(setDoc(doc(anon(), "enrollments/x_free"), freeEnr("x", "free")));
+  await assertFails(setDoc(doc(other(), "enrollments/stu_free"), freeEnr("stu", "free")));           // 남의 것
+  await assertFails(setDoc(doc(other(), "enrollments/oth_free"), freeEnr("oth", "free", { endAt: endIn(9999) })));
+  await assertFails(setDoc(doc(other(), "enrollments/oth_free"), freeEnr("oth", "free", { startAt: startAgo(30) })));   // 과거로 당겨 쓰기
+  await assertFails(setDoc(doc(other(), "enrollments/oth_free"), freeEnr("oth", "free", { status: "revoked" })));
+  await assertFails(setDoc(doc(other(), "enrollments/oth_free"), freeEnr("oth", "free", { source: "admin" })));
+  await assertFails(setDoc(doc(other(), "enrollments/oth_free"), freeEnr("oth", "free", { memo: "x" })));
+  await assertFails(setDoc(doc(other(), "enrollments/oth_free"), freeEnr("oth", "free", { extendedCount: 1 })));
+  await assertFails(setDoc(doc(stu(), "enrollments/stu_free2"), freeEnr("stu", "free2")));           // 이미 있으면 새로 만들기 불가(덮어쓰기)
+});
+test("무료 강좌로 바뀐 강좌: 본인 기간제·만료 수강권 → 기간 제한 없음 · 회수된 것·유료·다른 칸은 불가", async () => {
+  await putFree();
+  const toFree = (db, id, o = {}) => updateDoc(doc(db, "enrollments", id), { endAt: null, freeAt: serverTimestamp(), ...o });
+  await assertSucceeds(toFree(stu(), "stu_free2"));
+  await assertSucceeds(getDocs(collection(stu(), "courses/free2/videos")));
+  await assertSucceeds(toFree(as("exp", "exp@x.com"), "exp_free2"));                                 // 만료됐던 것도 다시 열림
+  await assertSucceeds(toFree(as("fut", "fut@x.com"), "fut_free2", { startAt: today0() }));           // 시작 전 → 오늘부터
+  await assertFails(toFree(as("rev", "rev@x.com"), "rev_free2"));                                     // 회수는 그대로
+  await assertFails(toFree(stu(), "stu_pub"));                                                        // 유료(수강료 없음)
+  await assertFails(toFree(other(), "stu_free2"));
+  await assertFails(toFree(as("exp", "exp@x.com"), "exp_free2", { startAt: startAgo(30) }));
+  await assertFails(toFree(stu(), "stu_free2", { extendedCount: 0, status: "active", memo: "x" }));
+  await assertFails(updateDoc(doc(stu(), "enrollments/stu_free2"), { endAt: endIn(9999), freeAt: serverTimestamp() }));
+});
+test("기간 제한 없음 수강권은 연장 불가", async () => {
+  await putFree();
+  await env.withSecurityRulesDisabled((c) => setDoc(doc(c.firestore(), "enrollments/oth_free"), freeEnr("oth", "free", { grantedAt: Timestamp.now() })));
+  await assertFails(updateDoc(doc(other(), "enrollments/oth_free"), { endAt: endIn(60), extendedCount: 1, extendedAt: serverTimestamp() }));
+});
+
 // ---------- 연장 (D12) ----------
 // withSecurityRulesDisabled 는 콜백의 반환값을 돌려주지 않으므로 바깥 변수에 담는다
 const rawEnr = async (id) => {

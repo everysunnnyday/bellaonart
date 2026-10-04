@@ -3,13 +3,14 @@
 // - 내용의 유일한 기준. 두 페이지 모두 <div id="art-sections"></div> 자리에 이걸로 그린다.
 // - 사진 넣는 법: 아래 PORTFOLIO 목록에 '/images/portfolio/파일명' 추가 (권장 3:4 세로, 900x1200)
 // =========================================================
-import { t, applyLang, onLangChange } from "./i18n.js";
+import { t, applyLang, onLangChange } from "./i18n.js?v=6";
 
+// 화면용 = 가벼운 WebP(2026-10-04, PNG 의 약 6%) · 같은 이름의 PNG 원본은 공유 미리보기(og:image)용으로 남겨 둠
 const PORTFOLIO = [
-  "/images/portfolio/work-01.png", "/images/portfolio/work-02.png",
-  "/images/portfolio/work-03.png", "/images/portfolio/work-04.png",
-  "/images/portfolio/work-05.png", "/images/portfolio/work-06.png",
-  "/images/portfolio/work-07.png", "/images/portfolio/work-08.png",
+  "/images/portfolio/work-01.webp", "/images/portfolio/work-02.webp",
+  "/images/portfolio/work-03.webp", "/images/portfolio/work-04.webp",
+  "/images/portfolio/work-05.webp", "/images/portfolio/work-06.webp",
+  "/images/portfolio/work-07.webp", "/images/portfolio/work-08.webp",
 ];
 
 // 제목 표기: 단어마다 첫 글자만 대문자 (2026-10-03 써니님)

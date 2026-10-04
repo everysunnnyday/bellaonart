@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "emu": "node scripts/emu.js",
-    "test": "node scripts/sync-core.js && node --test tests/core.test.js tests/tracker.test.js && node scripts/emu.js exec \"node --test --test-concurrency=1 tests/rules.test.js functions/reminder.test.js functions/redeem.test.js functions/thumb.test.js\""
+    "ver": "node scripts/site-version.js",
+    "test": "node scripts/sync-core.js && node --test tests/version.test.js tests/core.test.js tests/tracker.test.js &&node scripts/emu.js exec \"node --test --test-concurrency=1 tests/rules.test.js functions/reminder.test.js functions/redeem.test.js functions/thumb.test.js\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.0",

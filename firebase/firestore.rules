@@ -20,14 +20,26 @@ service cloud.firestore {
 
     function enrPath(u, cid) { return /databases/$(database)/documents/enrollments/$(u + '_' + cid); }
 
-    // 유효 수강권 = (이메일 인증된 회원) + 상태 active + 지금이 시작~종료 사이
+    // 유효 수강권 = (이메일 인증된 회원) + 상태 active + 지금이 시작~종료 사이 (종료일 null = 기간 제한 없음)
     // 구글 회원은 항상 인증됨 · 이메일 가입 회원은 인증 메일 링크를 눌러야 함
     function hasValid(cid) {
       let p = enrPath(uid(), cid);
       return signedIn() && request.auth.token.email_verified == true && exists(p)
         && get(p).data.status == 'active'
         && get(p).data.startAt <= request.time
-        && request.time <= get(p).data.endAt;
+        && (get(p).data.get('endAt', null) == null || request.time <= get(p).data.endAt);
+    }
+
+    // 회원이 직접 받는 무료 수강권의 시작 = 오늘 0시(한국시간) — 지금 이전이고 하루 안쪽이어야 함(과거로 당겨 쓰기 방지)
+    function freshStart(t) {
+      return t is timestamp && t <= request.time && t > request.time - duration.value(1, 'd');
+    }
+
+    // 무료 강좌 = 공개 + 수강료 "0"·"0원"·"무료" (2026-10-04)
+    // ⚠ js/core.js FREE_PRICE_RE 와 같은 규칙 — 바꾸면 둘 다
+    function isFreeCourse(cid) {
+      let c = get(/databases/$(database)/documents/courses/$(cid)).data;
+      return c.get('published', false) == true && c.get('priceLabel', '').matches('^ *(0+ *원?|무료) *$');
     }
 
     // ---------- 설정 ----------
@@ -106,6 +118,31 @@ service cloud.firestore {
 
       allow create, update: if isAdmin()
         && eid == request.resource.data.uid + '_' + request.resource.data.courseId;
+
+      // 무료 강좌(2026-10-04): 인증된 회원이 본인 수강권을 직접 받는다 — 지금 시작 · 기간 제한 없음(endAt null) · 정해진 칸·값만
+      // (강좌 상세를 열면 화면이 자동으로 만든다 — js/class-watch.js claimFree)
+      allow create: if signedIn() && request.auth.token.email_verified == true
+        && request.resource.data.uid == uid()
+        && eid == uid() + '_' + request.resource.data.courseId
+        && isFreeCourse(request.resource.data.courseId)
+        && request.resource.data.keys().hasOnly(['uid','courseId','status','startAt','endAt','extendedCount','source','grantedAt'])
+        && request.resource.data.status == 'active'
+        && freshStart(request.resource.data.startAt)
+        && request.resource.data.endAt == null
+        && request.resource.data.extendedCount == 0
+        && request.resource.data.source == 'free'
+        && request.resource.data.grantedAt == request.time;
+
+      // 무료 강좌에 이미 있던 본인 수강권(기간제·만료 포함, 회수 제외)을 기간 제한 없음으로 바꾼다
+      // 바뀌는 칸 = 종료일(null) · 바꾼 시각 · 시작일(그대로 또는 오늘 0시 — 시작 전이던 것을 바로 열 때)
+      allow update: if signedIn() && resource.data.uid == uid()
+        && request.auth.token.email_verified == true
+        && resource.data.status == 'active'
+        && isFreeCourse(resource.data.courseId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['endAt','startAt','freeAt'])
+        && request.resource.data.endAt == null
+        && request.resource.data.freeAt == request.time
+        && (request.resource.data.startAt == resource.data.startAt || freshStart(request.resource.data.startAt));
 
       // 회원 본인 연장 1회(D16·D17): 바뀌는 칸은 3개뿐, 종료일 정확히 +연장일수,
       // 수강 중(시작 ~ 종료 시각)이면 언제든 — js/core.js canExtend 와 같은 조건
