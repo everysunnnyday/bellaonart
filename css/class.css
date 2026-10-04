@@ -112,6 +112,22 @@ button{font:inherit;color:inherit;cursor:pointer}
 .d-act .d-msg{color:var(--ink-soft);font-size:.9rem}
 .d-act .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .d-act .empty{padding:18px 0;text-align:left}   /* 이메일 인증 안내를 상세 안에 넣을 때 */
+/* 관리자: 썸네일·도안 PDF 끌어다 놓기 칸 (js/admin.js bindDrop) */
+.drop{display:flex;align-items:center;gap:16px;margin-top:6px;padding:14px;border:1.5px dashed var(--line);border-radius:12px;background:#fff;cursor:pointer;transition:.2s}
+.drop:hover,.drop:focus-visible,.drop.over{border-color:var(--sage-deep);background:rgba(157,170,139,.08);outline:none}
+.drop.busy{opacity:.6;pointer-events:none}
+.drop-prev{flex:none;width:128px;aspect-ratio:16/9;border-radius:8px;background:var(--line) center/cover no-repeat}
+.drop-prev.pdf{display:flex;align-items:center;justify-content:center;width:72px;aspect-ratio:3/4;font-size:.8rem;letter-spacing:.1em;color:#fff;background:var(--pink-deep)}
+.drop-txt{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:.88rem}
+.drop + div{margin-top:8px}
+#cFiles{display:flex;flex-direction:column;gap:22px}
+.pat-list{list-style:none;margin:8px 0 0;padding:0;border-top:1px solid var(--line)}
+.pat-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.pat-list li > span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 수강생: 도안 내려받기 버튼(강의실 옆칸 · 마이페이지) — 파일마다 하나, 긴 이름은 … */
+.pat-box{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.pat-box .btn,.my-item .acts [data-pat-id]{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+
 /* 수강 신청(카카오톡) ↔ 수강 코드 등록 — 두 영역을 실선으로 나눈다(2026-10-04 써니님 첨부 3) */
 .d-act .d-expired{margin-bottom:12px}
 .code-form{margin-top:26px;padding-top:22px;border-top:1px solid var(--line)}

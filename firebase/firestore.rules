@@ -21,6 +21,7 @@ service cloud.firestore {
     function enrPath(u, cid) { return /databases/$(database)/documents/enrollments/$(u + '_' + cid); }
 
     // 유효 수강권 = (이메일 인증된 회원) + 상태 active + 지금이 시작~종료 사이 (종료일 null = 기간 제한 없음)
+    // ⚠ storage.rules(도안 PDF 받기)에 같은 판정이 한 번 더 있다 — 바꾸면 둘 다
     // 구글 회원은 항상 인증됨 · 이메일 가입 회원은 인증 메일 링크를 눌러야 함
     function hasValid(cid) {
       let p = enrPath(uid(), cid);

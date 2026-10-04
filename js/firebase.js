@@ -49,8 +49,8 @@ const FN_BASE = IS_EMU ? "http://127.0.0.1:5099/demo-bellaon/asia-northeast3" : 
 export const courseThumbUrl = (cid) => `${FN_BASE}/courseThumbImg?c=${encodeURIComponent(cid)}`;
 export const CONFIGURED = IS_EMU || !!PROD_CONFIG.projectId;
 
-const app = initializeApp(IS_EMU
-  ? { apiKey: "demo-key", authDomain: "localhost", projectId: "demo-bellaon" }
+export const app = initializeApp(IS_EMU   // js/files.js(파일 창고)가 같은 앱을 쓴다
+  ? { apiKey: "demo-key", authDomain: "localhost", projectId: "demo-bellaon", storageBucket: "demo-bellaon.appspot.com" }
   : PROD_CONFIG);
 
 export const auth = getAuth(app);

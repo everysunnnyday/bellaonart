@@ -6,16 +6,19 @@
 import {
   db, CONFIGURED, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, where, orderBy,
   writeBatch, serverTimestamp, Timestamp,
-} from "./firebase.js?v=6";
+} from "./firebase.js?v=7";
 import {
-  initShell, watchUser, esc, $, toEnr, tsMs, loadPolicy, login, toast, dialog, notConfiguredHtml,
-} from "./common.js?v=6";
+  initShell, watchUser, esc, $, toEnr, tsMs, loadPolicy, login, toast, dialog, notConfiguredHtml, thumbOf,
+} from "./common.js?v=7";
+import {
+  uploadThumb, deleteThumb, uploadPattern, deletePattern, downloadPattern, patternsOf, fmtSize, PATTERN_MAX, THUMB_MAX_W,
+} from "./files.js?v=7";
 import {
   DEFAULT_POLICY, enrollState, fmtLeft, fmtPeriod, isFreePrice, courseStat, fmtDur, fmtPct, fmtDate,
   kstDateStr, startOfKstDay, endOfKstDay, defaultEndStr, courseDays, CODE_RE, normCode,
-} from "./core.js?v=6";
-import { parseYouTubeId, probeVideo } from "./youtube.js?v=6";
-import { CATEGORIES } from "./course-list.js?v=6";   // 카테고리 3개는 이 한 곳에 고정
+} from "./core.js?v=7";
+import { parseYouTubeId, probeVideo } from "./youtube.js?v=7";
+import { CATEGORIES } from "./course-list.js?v=7";   // 카테고리 3개는 이 한 곳에 고정
 
 initShell({ active: "admin", kakao: false });
 const root = $("#admin");
@@ -165,8 +168,7 @@ async function renderCourseEditor() {
       <div class="field">카테고리 (여러 개 고를 수 있음)
         <div class="cat-checks">${CATEGORIES.map((k) => `<label class="check"><input type="checkbox" name="cat" value="${k.id}" ${(c.categories || []).includes(k.id) ? "checked" : ""}> ${esc(k.title)}</label>`).join("")}</div>
         <span class="hint">고른 카테고리의 강의 목록에 나옵니다. 메인·Workshop 카테고리 카드는 공개 강좌가 하나라도 있으면 목록으로, 없으면 '준비 중'으로 연결됩니다.</span></div>
-      <label class="field">썸네일 이미지 주소 (선택)<input name="thumb" value="${esc(/ytimg\.com/.test(c.thumb || "") ? "" : c.thumb)}" placeholder="비우면 1차시 유튜브 썸네일 자동">
-        <span class="hint">비워 두면 강의 목록·강좌 상세·마이페이지에 <b>1차시 유튜브 썸네일</b>이 자동으로 나옵니다(영상 주소는 방문자에게 보이지 않음). 다른 그림을 쓰려면 이미지 주소를 넣으세요.</span></label>
+      <div id="cFiles">${isNew ? `<p class="hint">썸네일·도안 PDF 는 강좌를 만든 뒤 여기서 올릴 수 있습니다.</p>` : ""}</div>
       <label class="check"><input type="checkbox" name="published" ${c.published ? "checked" : ""}> 공개 (Workshop 페이지에 보임)</label>
       <div><button type="submit" class="btn solid">${isNew ? "강좌 만들기" : "저장"}</button></div>
     </form>
@@ -174,25 +176,128 @@ async function renderCourseEditor() {
   ${isNew ? "" : `<div class="card-box" style="margin-top:20px" id="lBox"><div class="empty">차시 불러오는 중…</div></div>`}`;
 
   $("#cForm").onsubmit = (e) => { e.preventDefault(); saveCourse(isNew); };
+  if (!isNew) renderCourseFiles(c);
   if (!isNew) {
     S.lessons = await loadLessons(c.id);
     renderLessons();
   }
 }
 
+// ---------- 썸네일 · 도안 PDF (끌어다 놓기 또는 눌러서 고르기 → 바로 올리고 강좌에 기록) ----------
+// 이 칸만 다시 그린다(위 입력칸에 저장 안 한 글이 있어도 지워지지 않게)
+function renderCourseFiles(c) {
+  const box = $("#cFiles");
+  if (!box) return;
+  const upThumb = !!c.thumbPath;   // 창고에 올린 그림
+  const pats = patternsOf(c);
+  box.innerHTML = `
+    <div class="field">썸네일
+      <div class="drop" id="thumbDrop" tabindex="0" role="button" aria-label="썸네일 그림 올리기">
+        <div class="drop-prev" style="background-image:url('${esc(thumbOf(c, c.id))}')"></div>
+        <div class="drop-txt"><b>그림을 끌어다 놓거나 눌러서 고르기</b>
+          <span class="hint">JPG·PNG·WebP → 자동으로 WebP · 가로 ${THUMB_MAX_W}px 이하로 바꿔 올립니다</span>
+          <span class="hint drop-state">지금: ${upThumb ? "올린 그림" : c.thumb ? "직접 넣은 그림 주소" : "1차시 유튜브 썸네일(자동)"}</span></div>
+        <input type="file" accept="image/*" hidden>
+      </div>
+      ${c.thumb ? `<div><button type="button" class="btn sm" id="thumbReset">유튜브 썸네일(자동)로 되돌리기</button></div>` : ""}
+    </div>
+    <div class="field">도안 PDF (여러 개 · 파일 이름으로 구분)
+      <div class="drop" id="patDrop" tabindex="0" role="button" aria-label="도안 PDF 올리기">
+        <div class="drop-prev pdf">PDF</div>
+        <div class="drop-txt"><b>PDF 를 끌어다 놓거나 눌러서 고르기 (여러 개 한꺼번에 가능)</b>
+          <span class="hint">파일당 ${fmtSize(PATTERN_MAX)} 까지 · 유효 수강권이 있는 회원만 내려받기 · <b>같은 이름을 다시 올리면 교체</b></span>
+          <span class="hint drop-state">지금: ${pats.length ? `${pats.length}개 — 강좌 상세에 "도안 포함" 표시` : "없음"}</span></div>
+        <input type="file" accept="application/pdf,.pdf" multiple hidden>
+      </div>
+      ${pats.length ? `<ul class="pat-list">${pats.map((p) => `<li data-pid="${esc(p.id)}"><span><b>${esc(p.name)}</b> <span class="hint">${fmtSize(p.size)}</span></span>
+        <span><button type="button" class="btn sm" data-pact="dl">내려받아 확인</button> <button type="button" class="btn sm" data-pact="del">삭제</button></span></li>`).join("")}</ul>` : ""}
+    </div>`;
+
+  const setCourse = async (patch) => {
+    await updateDoc(doc(db, "courses", c.id), { ...patch, updatedAt: serverTimestamp() });
+    Object.assign(c, patch);
+    renderCourseFiles(c);
+  };
+  bindDrop($("#thumbDrop"), async ([file]) => {
+    const { url, path, width, height, size } = await uploadThumb(c.id, file);
+    const old = c.thumbPath;
+    await setCourse({ thumb: url, thumbPath: path });
+    await deleteThumb(old).catch(() => {});   // 예전에 올린 그림 정리(실패해도 화면엔 영향 없음)
+    toast(`썸네일을 올렸습니다 (WebP ${width}×${height} · ${fmtSize(size)})`);
+  });
+  bindDrop($("#patDrop"), async (files) => {
+    // 하나라도 PDF 가 아니거나 너무 크면 아무것도 올리지 않는다(일부만 올라가 헷갈리지 않게)
+    const bad = files.find((f) => (f.type !== "application/pdf" && !/\.pdf$/i.test(f.name)) || f.size > PATTERN_MAX);
+    if (bad) throw new Error(`${bad.name} — PDF 파일, ${fmtSize(PATTERN_MAX)} 이하만 올릴 수 있습니다. (아무것도 올리지 않았습니다)`);
+    const up = [];
+    try { for (const f of files) up.push({ ...(await uploadPattern(c.id, f)), updatedAt: Timestamp.now() }); }
+    catch (e) {   // 중간에 실패하면 이번에 올린 것도 지워 목록에 없는 파일이 창고에 남지 않게
+      for (const p of up) await deletePattern(c.id, p.id).catch(() => {});
+      throw e;
+    }
+    const names = new Set(up.map((p) => p.name));
+    const replaced = patternsOf(c).filter((p) => names.has(p.name));   // 같은 이름 = 교체
+    await setCourse({ patterns: [...patternsOf(c).filter((p) => !names.has(p.name)), ...up] });
+    for (const p of replaced) await deletePattern(c.id, p.id).catch(() => {});
+    toast(`도안 ${up.length}개를 올렸습니다${replaced.length ? ` (교체 ${replaced.length}개)` : ""}.`);
+  });
+  box.querySelectorAll("[data-pact]").forEach((b) => {
+    const p = patternsOf(c).find((x) => x.id === b.closest("[data-pid]").dataset.pid);
+    b.onclick = async () => {
+      if (b.dataset.pact === "dl") return downloadPattern(c.id, p.id).catch((e) => toast("내려받지 못했습니다: " + (e.code || e.message)));
+      if (!(await dialog({ title: "도안 삭제", body: `「${esc(p.name)}」 을(를) 지울까요?<br><span class="small muted">수강생 화면의 이 도안 버튼도 사라집니다.</span>`, ok: "삭제" }))) return;
+      await deletePattern(c.id, p.id);
+      await setCourse({ patterns: patternsOf(c).filter((x) => x.id !== p.id) });
+      toast("도안을 지웠습니다.");
+    };
+  });
+  if ($("#thumbReset")) $("#thumbReset").onclick = async () => {
+    const old = c.thumbPath;
+    await setCourse({ thumb: "", thumbPath: "" });
+    await deleteThumb(old).catch(() => {});
+    toast("1차시 유튜브 썸네일(자동)로 되돌렸습니다.");
+  };
+}
+
+// 끌어다 놓기 칸 — 눌러서 고르기·키보드(Enter)도 같은 동작 · 올리는 동안 다시 못 누름 · onFiles 는 파일 목록(배열)을 받는다
+function bindDrop(el, onFiles) {
+  const input = el.querySelector("input[type=file]");
+  const state = el.querySelector(".drop-state");
+  const run = async (list) => {
+    const files = [...(list || [])];
+    if (!files.length || el.classList.contains("busy")) return;
+    el.classList.add("busy");
+    const before = state.innerHTML;
+    state.textContent = `올리는 중… ${files.map((f) => f.name).join(", ")}`;
+    try { await onFiles(files); }
+    catch (e) {   // 서버 오류(e.code)만 기록 · 형식·크기 안내는 사용자 실수를 막은 것이라 안내만
+      if (e.code) console.error(e);
+      state.innerHTML = before; toast(e.code ? `올리지 못했습니다: ${e.code}` : e.message, 5000);
+    }
+    finally { el.classList.remove("busy"); }
+  };
+  el.onclick = (e) => { if (e.target !== input) input.click(); };
+  el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } };
+  input.onchange = () => { run(input.files); input.value = ""; };
+  el.ondragover = (e) => { e.preventDefault(); el.classList.add("over"); };
+  el.ondragleave = () => el.classList.remove("over");
+  el.ondrop = (e) => { e.preventDefault(); el.classList.remove("over"); run(e.dataTransfer.files); };
+}
+// 칸 밖에 잘못 떨어뜨려도 브라우저가 파일을 열어 관리자 화면을 떠나지 않게
+window.addEventListener("dragover", (e) => e.preventDefault());
+window.addEventListener("drop", (e) => e.preventDefault());
+
 async function saveCourse(isNew) {
   const f = $("#cForm");
   const id = isNew ? f.id.value.trim() : S.selCourse;
   const data = {
     title: f.title.value.trim(), summary: f.summary.value.trim(), description: f.description.value.trim(),
-    priceLabel: f.priceLabel.value.trim(), materials: f.materials.value.trim(), thumb: f.thumb.value.trim(),
+    priceLabel: f.priceLabel.value.trim(), materials: f.materials.value.trim(),   // 썸네일·도안은 아래 끌어다 놓기 칸이 바로 저장
     defaultDays: parseInt(f.defaultDays.value, 10),
     categories: [...f.querySelectorAll("[name=cat]:checked")].map((x) => x.value),
     published: f.published.checked, updatedAt: serverTimestamp(),
   };
   if (data.published && !data.categories.length) return toast("공개하려면 카테고리를 하나 이상 골라 주세요(목록에 나올 곳).");
-  // 유튜브 썸네일 주소에는 영상 ID 가 들어 있다 → 저장하지 않고 자동(서버가 대신 가져옴)으로
-  if (/ytimg\.com|youtube\.com|youtu\.be/.test(data.thumb)) { data.thumb = ""; toast("유튜브 썸네일은 자동으로 나오므로 주소를 비웠습니다(영상 주소 보호)."); }
   if (!ID_RE.test(id)) return toast("강좌 ID는 영문 소문자·숫자·하이픈 2~40자로 정해 주세요.");
   if (!data.title) return toast("강좌 제목을 입력해 주세요.");
   if (!(data.defaultDays >= 1)) return toast("기본 수강기간은 1일 이상이어야 합니다.");

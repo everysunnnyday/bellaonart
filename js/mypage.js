@@ -5,13 +5,14 @@ import {
   auth, db, doc, getDoc, getDocs, updateDoc, deleteDoc, collection, query, where, orderBy,
   serverTimestamp, Timestamp, updateProfile, EmailAuthProvider, reauthenticateWithCredential,
   reauthenticateWithPopup, GoogleAuthProvider, updatePassword, deleteUser, signOut,
-} from "./firebase.js?v=6";
+} from "./firebase.js?v=7";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast, dialog, authMsg,
   KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate, refreshAuthArea,
-} from "./common.js?v=6";
-import { enrollState, canExtend, daysLeft, fmtLeft, fmtPeriod, endSortKey, noEnd, courseStat, fmtPct, fmtDate, DAY } from "./core.js?v=6";
-import { mountCategories } from "./course-list.js?v=6";
+} from "./common.js?v=7";
+import { enrollState, canExtend, daysLeft, fmtLeft, fmtPeriod, endSortKey, noEnd, courseStat, fmtPct, fmtDate, DAY } from "./core.js?v=7";
+import { mountCategories } from "./course-list.js?v=7";
+import { patternButtonsHtml, bindPatternButtons } from "./files.js?v=7";
 
 initShell({ active: "mypage", kakao: false });
 const box = $("#my");
@@ -108,11 +109,13 @@ function renderClass() {
       <div class="acts">
         ${state === "active" ? `<a class="btn solid" href="/class/watch.html?c=${encodeURIComponent(e.courseId)}">${pct ? "이어보기" : "강의실 입장"}</a>` : ""}
         ${ext ? `<button type="button" class="btn sage" data-ext="${i}">수강 연장 +${policy.extendDays}일 (무료)</button>` : ""}
+        ${state === "active" ? patternButtonsHtml(e.courseId, course) : ""}
         ${(state === "expired" || state === "revoked") && live ? `<a class="btn" href="${KAKAO_CHANNEL}" target="_blank" rel="noopener">수강 문의</a>` : ""}
       </div>
     </div>`;
   }).join("")}</div>` : ""}${browse}`;
   box.querySelectorAll("[data-ext]").forEach((b) => { b.onclick = () => extend(items[+b.dataset.ext]); });
+  bindPatternButtons(box);   // 도안 버튼(파일마다 하나 · js/files.js)
   if (!live) mountCategories($("#wsList"), { info: true });   // Workshop 페이지와 같은 카테고리 카드(js/course-list.js)
 }
 

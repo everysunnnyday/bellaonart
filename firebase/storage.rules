@@ -1,0 +1,49 @@
+rules_version = '2';
+// =========================================================
+// 벨라온 온라인 클래스 — 파일 창고(Firebase Storage) 보안 규칙 (2026-10-04)
+// - 도안 PDF(강좌마다 여러 개): 관리자 + 유효 수강권 회원만 받기 · 관리자만 올리기(PDF, 20MB 이하)
+// - 썸네일: 누구나 보기(강의 목록·상세에 보임) · 관리자만 올리기(WebP, 2MB 이하)
+// ⚠ 관리자·유효 수강권 판정은 firestore.rules 의 isAdmin·hasValid 와 같은 내용(규칙 파일끼리 못 불러옴) — 바꾸면 둘 다
+//   (수강 상태 계산 기준 = js/core.js enrollState · 종료일 null = 기간 제한 없음)
+// =========================================================
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function fsDoc(path) { return firestore.get(/databases/(default)/documents/$(path)); }
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in fsDoc('config/admins').data.emails;
+    }
+
+    function hasValid(cid) {
+      let p = /databases/(default)/documents/enrollments/$(request.auth.uid + '_' + cid);
+      return request.auth != null && request.auth.token.email_verified == true
+        && firestore.exists(p)
+        && firestore.get(p).data.status == 'active'
+        && firestore.get(p).data.startAt <= request.time
+        && (firestore.get(p).data.get('endAt', null) == null || request.time <= firestore.get(p).data.endAt);
+    }
+
+    // 도안 — 강좌마다 여러 개(patterns/번호.pdf, 원래 이름은 강좌 문서 patterns 목록에)
+    match /courses/{cid}/patterns/{file} {
+      allow read: if file.matches('[0-9]+[.]pdf') && (isAdmin() || hasValid(cid));
+      allow create, update: if isAdmin()
+        && file.matches('[0-9]+[.]pdf')
+        && request.resource.size <= 20 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+      allow delete: if isAdmin();
+    }
+
+    // 썸네일 — thumb-올린시각.webp (올릴 때마다 새 이름 → 옛 그림이 남지 않음)
+    match /courses/{cid}/{name} {
+      allow read: if name.matches('thumb-[0-9]+[.]webp');
+      allow create, update: if isAdmin()
+        && name.matches('thumb-[0-9]+[.]webp')
+        && request.resource.size <= 2 * 1024 * 1024
+        && request.resource.contentType == 'image/webp';
+      allow delete: if isAdmin() && name.matches('thumb-[0-9]+[.]webp');
+    }
+  }
+}

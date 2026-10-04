@@ -71,9 +71,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- 색·글꼴 = base.css · 상단/하단/카톡/로그인 창 = shell.css · 공개 페이지 = site.css -->
-<link rel="stylesheet" href="/css/base.css?v=6">
-<link rel="stylesheet" href="/css/shell.css?v=6">
-<link rel="stylesheet" href="/css/site.css?v=6">
+<link rel="stylesheet" href="/css/base.css?v=7">
+<link rel="stylesheet" href="/css/shell.css?v=7">
+<link rel="stylesheet" href="/css/site.css?v=7">
 </head>
 <body>
 <header id="site-header"></header>
@@ -127,10 +127,10 @@
 <script type="module">
   // 모듈 주소의 ?v= 번호는 손대지 말 것 — 배포 전 firebase 폴더에서 npm run ver 가 모든 파일을 같은 번호로 맞춤
   // (번호가 다르면 같은 파일이 두 번 실행되고, 번호를 안 올리면 방문자가 옛 사본을 섞어 씀)
-  import { initShell, initReveal } from "/js/common.js?v=6";
-  import { renderArtSections } from "/js/art-sections.js?v=6";
-  import { renderContact } from "/js/contact-section.js?v=6";
-  import { mountCategories } from "/js/course-list.js?v=6";
+  import { initShell, initReveal } from "/js/common.js?v=7";
+  import { renderArtSections } from "/js/art-sections.js?v=7";
+  import { renderContact } from "/js/contact-section.js?v=7";
+  import { mountCategories } from "/js/course-list.js?v=7";
   initShell({ active: "home" });
   renderArtSections(document.getElementById("art-sections"));
   mountCategories(document.getElementById("ws-cards"));   // 메인 = 카테고리 카드 3장 · 제목만

@@ -18,8 +18,8 @@ if (existsSync(adoptium)) {
 }
 
 const [mode, cmd] = process.argv.slice(2);
-// 미리보기(화면 검증)는 서버 함수(수강 코드)까지 · 자동 검사는 함수 파일을 직접 부르므로 로그인·DB만
-const base = ["--project", "demo-bellaon", "--only", mode === "exec" ? "auth,firestore" : "auth,firestore,functions"];
+// 미리보기(화면 검증)는 서버 함수(수강 코드)까지 · 자동 검사는 함수 파일을 직접 부르므로 로그인·DB·파일 창고만
+const base = ["--project", "demo-bellaon", "--only", mode === "exec" ? "auth,firestore,storage" : "auth,firestore,functions,storage"];
 if (mode !== "exec") await import("./sync-core.js");   // 함수가 쓰는 core.js 복사본을 최신으로
 // 저장된 데이터가 있을 때만 불러온다(처음엔 폴더가 없어 --import 가 실패하므로)
 const imp = existsSync(".emu-data") ? ["--import", ".emu-data"] : [];

@@ -4,10 +4,10 @@
 // - 강좌는 관리자 페이지에서 카테고리를 여러 개 고를 수 있다(courses.categories = ["paper-flower", …])
 // - 카드를 누르면: 그 카테고리에 공개 강좌가 있으면 강의 목록(/workshop.html?cat=ID), 없으면 '준비 중' 페이지
 // - 강의 목록의 강좌 카드 그림 = 1차시 유튜브 썸네일(서버가 대신 가져옴 — common.js thumbOf)
-import { db, collection, query, where, getDocs } from "./firebase.js?v=6";
-import { watchUser, esc, toEnr, initReveal, thumbOf } from "./common.js?v=6";
-import { enrollState, fmtLeft, fmtPrice } from "./core.js?v=6";
-import { t, tv, onLangChange } from "./i18n.js?v=6";
+import { db, collection, query, where, getDocs } from "./firebase.js?v=7";
+import { watchUser, esc, toEnr, initReveal, thumbOf } from "./common.js?v=7";
+import { enrollState, fmtLeft, fmtPrice } from "./core.js?v=7";
+import { t, tv, onLangChange } from "./i18n.js?v=7";
 
 // intro = 카테고리 강의 목록 위에 나오는 소개(사진 왼쪽 · 글 오른쪽). 한국어는 여기, 영문은 i18n.js(cat.<id>.*)
 //         소개가 없는 카테고리는 제목·목록만 보인다. 문단은 body 배열 한 칸 = 한 문단.

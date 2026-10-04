@@ -134,6 +134,8 @@ export const EN = {
   "cd.periodFree": "No time limit",
   "cd.free": "Free",
   "cd.materials": "Materials",
+  "cd.pattern": "Pattern",
+  "cd.patternVal": "Included · {n} PDF file(s) (download for students)",
   "cd.about": "About This Class",
   "cd.outline": "Curriculum",
   "cd.noLessons": "The lesson videos are being prepared.",
