@@ -6,19 +6,19 @@
 import {
   db, CONFIGURED, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, where, orderBy,
   writeBatch, serverTimestamp, Timestamp,
-} from "./firebase.js?v=12";
+} from "./firebase.js?v=13";
 import {
   initShell, watchUser, esc, $, toEnr, tsMs, loadPolicy, login, toast, dialog, notConfiguredHtml, thumbOf,
-} from "./common.js?v=12";
+} from "./common.js?v=13";
 import {
   uploadThumb, deleteThumb, uploadPattern, deletePattern, downloadPattern, patternsOf, fmtSize, PATTERN_MAX, THUMB_MAX_W,
-} from "./files.js?v=12";
+} from "./files.js?v=13";
 import {
   DEFAULT_POLICY, enrollState, fmtLeft, fmtPeriod, isFreePrice, courseStat, fmtDur, fmtPct, fmtDate,
   kstDateStr, startOfKstDay, endOfKstDay, defaultEndStr, courseDays, CODE_RE, normCode, MODES, modesOf, HEADS, headOf,
-} from "./core.js?v=12";
-import { parseYouTubeId, probeVideo } from "./youtube.js?v=12";
-import { CATEGORIES } from "./course-list.js?v=12";   // 카테고리 3개는 이 한 곳에 고정
+} from "./core.js?v=13";
+import { parseYouTubeId, probeVideo } from "./youtube.js?v=13";
+import { CATEGORIES } from "./course-list.js?v=13";   // 카테고리 3개는 이 한 곳에 고정
 
 initShell({ active: "admin", kakao: false });
 const root = $("#admin");

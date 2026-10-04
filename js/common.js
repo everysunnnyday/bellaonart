@@ -10,9 +10,9 @@ import {
   GoogleAuthProvider, signInWithPopup, signInWithCredential, onAuthStateChanged, signOut,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification,
   sendPasswordResetEmail, updateProfile, courseThumbUrl,
-} from "./firebase.js?v=12";
-import { t, tv, getLang, setLang, applyLang, onLangChange } from "./i18n.js?v=12";
-import { modesOf, headOf } from "./core.js?v=12";
+} from "./firebase.js?v=13";
+import { t, tv, getLang, setLang, applyLang, onLangChange } from "./i18n.js?v=13";
+import { modesOf, headOf } from "./core.js?v=13";
 
 export const KAKAO_CHANNEL = "https://pf.kakao.com/_JKTEn/chat";
 export const PHONE = "010-7302-5170";

@@ -4,9 +4,9 @@
 // - 권한은 firebase/storage.rules: 도안 = 관리자 + 유효 수강권 회원만 받기 · 썸네일 = 누구나 보기 · 올리기는 관리자만
 // - 강좌 문서에는 파일 정보만: patterns = [{ id, name, size, updatedAt }] · thumb = 그림 주소 · thumbPath = 창고 안 위치
 // =========================================================
-import { app, IS_EMU } from "./firebase.js?v=12";
-import { toast, esc, dialog } from "./common.js?v=12";
-import { t } from "./i18n.js?v=12";
+import { app, IS_EMU } from "./firebase.js?v=13";
+import { toast, esc, dialog } from "./common.js?v=13";
+import { t } from "./i18n.js?v=13";
 import {
   getStorage, connectStorageEmulator, ref, uploadBytes, getDownloadURL, deleteObject,
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js";

@@ -4,10 +4,10 @@
 // - 강좌는 관리자 페이지에서 카테고리를 여러 개 고를 수 있다(courses.categories = ["paper-flower", …])
 // - 카드를 누르면: 그 카테고리에 공개 강좌가 있으면 강의 목록(/workshop.html?cat=ID), 없으면 '준비 중' 페이지
 // - 강의 목록의 강좌 카드 그림 = 1차시 유튜브 썸네일(서버가 대신 가져옴 — common.js thumbOf)
-import { db, collection, query, where, getDocs } from "./firebase.js?v=12";
-import { watchUser, esc, toEnr, initReveal, thumbOf, modeTagsHtml, titleHtml } from "./common.js?v=12";
-import { enrollState, fmtLeft, fmtPrice, isOfflineOnly } from "./core.js?v=12";
-import { t, tv, onLangChange } from "./i18n.js?v=12";
+import { db, collection, query, where, getDocs } from "./firebase.js?v=13";
+import { watchUser, esc, toEnr, initReveal, thumbOf, modeTagsHtml, titleHtml } from "./common.js?v=13";
+import { enrollState, fmtLeft, fmtPrice, isOfflineOnly } from "./core.js?v=13";
+import { t, tv, onLangChange } from "./i18n.js?v=13";
 
 // intro = 카테고리 강의 목록 위에 나오는 소개(사진 왼쪽 · 글 오른쪽). 한국어는 여기, 영문은 i18n.js(cat.<id>.*)
 //         소개가 없는 카테고리는 제목·목록만 보인다. 문단은 body 배열 한 칸 = 한 문단.
@@ -15,7 +15,7 @@ export const CATEGORIES = [
   { id: "floral-art-design", title: "Floral Art & Design", img: "/images/class/MASTER.webp" },
   { id: "paper-flower", title: "Paper Flower", img: "/images/class/paper-flower.jpg",
     intro: {   // 2026-10-04 써니님 제공 글
-      img: "/images/class/paper-flower-intro-wide.webp",   // 2026-10-04 파노라마(왼쪽 장미 · 오른쪽 빈 벽에 글) — css/shell.css .cat-intro
+      img: "/images/class/paper-flower-intro.webp",
       head: "꽃을 들여다보고,<br>천천히 만들어가는 시간.",
       body: [
         "꽃 한 송이를 만들다 보면 평소에는 지나쳤던 모습들이 눈에 들어옵니다. 꽃잎이 휘어지는 방향, 겹쳐진 모양, 안쪽과 바깥쪽의 미묘한 색 차이까지. 페이퍼 플라워는 자연을 자세히 바라보는 데서 시작합니다.",
