@@ -6,19 +6,19 @@
 import {
   db, CONFIGURED, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, where, orderBy,
   writeBatch, serverTimestamp, Timestamp,
-} from "./firebase.js?v=13";
+} from "./firebase.js?v=14";
 import {
   initShell, watchUser, esc, $, toEnr, tsMs, loadPolicy, login, toast, dialog, notConfiguredHtml, thumbOf,
-} from "./common.js?v=13";
+} from "./common.js?v=14";
 import {
   uploadThumb, deleteThumb, uploadPattern, deletePattern, downloadPattern, patternsOf, fmtSize, PATTERN_MAX, THUMB_MAX_W,
-} from "./files.js?v=13";
+} from "./files.js?v=14";
 import {
   DEFAULT_POLICY, enrollState, fmtLeft, fmtPeriod, isFreePrice, courseStat, fmtDur, fmtPct, fmtDate,
   kstDateStr, startOfKstDay, endOfKstDay, defaultEndStr, courseDays, CODE_RE, normCode, MODES, modesOf, HEADS, headOf,
-} from "./core.js?v=13";
-import { parseYouTubeId, probeVideo } from "./youtube.js?v=13";
-import { CATEGORIES } from "./course-list.js?v=13";   // 카테고리 3개는 이 한 곳에 고정
+} from "./core.js?v=14";
+import { parseYouTubeId, probeVideo } from "./youtube.js?v=14";
+import { CATEGORIES } from "./course-list.js?v=14";   // 카테고리 3개는 이 한 곳에 고정
 
 initShell({ active: "admin", kakao: false });
 const root = $("#admin");
@@ -203,28 +203,31 @@ function renderCourseFiles(c) {
   if (!box) return;
   const upThumb = !!c.thumbPath;   // 창고에 올린 그림
   const pats = patternsOf(c);
-  box.innerHTML = `
+  // 좌 = 썸네일(지금 그림을 크게 미리보기) · 우 = 도안(작은 올리기 칸 + 파일 목록) — 2026-10-04 써니님
+  box.innerHTML = `<div class="file-cols">
     <div class="field">썸네일
-      <div class="drop" id="thumbDrop" tabindex="0" role="button" aria-label="썸네일 그림 올리기">
+      <div class="drop drop-v" id="thumbDrop" tabindex="0" role="button" aria-label="썸네일 그림 올리기">
         <div class="drop-prev" style="background-image:url('${esc(thumbOf(c, c.id))}')"></div>
-        <div class="drop-txt"><b>그림을 끌어다 놓거나 눌러서 고르기</b>
-          <span class="hint">JPG·PNG·WebP → 자동으로 WebP · 가로 ${THUMB_MAX_W}px 이하로 바꿔 올립니다</span>
+        <div class="drop-txt"><b>그림을 끌어다 놓거나 눌러서 바꾸기</b>
+          <span class="hint">JPG·PNG·WebP → 자동으로 WebP · 가로 ${THUMB_MAX_W}px 이하</span>
           <span class="hint drop-state">지금: ${upThumb ? "올린 그림" : c.thumb ? "직접 넣은 그림 주소" : "1차시 유튜브 썸네일(자동)"}</span></div>
         <input type="file" accept="image/*" hidden>
       </div>
       ${c.thumb ? `<div><button type="button" class="btn sm" id="thumbReset">유튜브 썸네일(자동)로 되돌리기</button></div>` : ""}
     </div>
-    <div class="field">도안 PDF (여러 개 · 파일 이름으로 구분)
+    <div class="field">도안 PDF
       <div class="drop" id="patDrop" tabindex="0" role="button" aria-label="도안 PDF 올리기">
         <div class="drop-prev pdf">PDF</div>
-        <div class="drop-txt"><b>PDF 를 끌어다 놓거나 눌러서 고르기 (여러 개 한꺼번에 가능)</b>
-          <span class="hint">파일당 ${fmtSize(PATTERN_MAX)} 까지 · 유효 수강권이 있는 회원만 내려받기 · <b>같은 이름을 다시 올리면 교체</b></span>
-          <span class="hint drop-state">지금: ${pats.length ? `${pats.length}개 — 강좌 상세에 "도안 포함" 표시` : "없음"}</span></div>
+        <div class="drop-txt"><b>PDF 를 끌어다 놓거나 눌러서 추가</b>
+          <span class="hint">여러 개 가능 · 파일당 ${fmtSize(PATTERN_MAX)} · 같은 이름은 교체 · 수강생만 내려받기</span>
+          <span class="hint drop-state">지금: ${pats.length ? `${pats.length}개` : "없음"}</span></div>
         <input type="file" accept="application/pdf,.pdf" multiple hidden>
       </div>
       ${pats.length ? `<ul class="pat-list">${pats.map((p) => `<li data-pid="${esc(p.id)}"><span><b>${esc(p.name)}</b> <span class="hint">${fmtSize(p.size)}</span></span>
-        <span><button type="button" class="btn sm" data-pact="dl">내려받아 확인</button> <button type="button" class="btn sm" data-pact="del">삭제</button></span></li>`).join("")}</ul>` : ""}
-    </div>`;
+        <span class="pat-acts"><button type="button" class="btn sm" data-pact="dl">확인</button><button type="button" class="btn sm" data-pact="del">삭제</button></span></li>`).join("")}</ul>`
+        : `<p class="hint pat-none">올린 도안이 없습니다.</p>`}
+    </div>
+  </div>`;
 
   const setCourse = async (patch) => {
     await updateDoc(doc(db, "courses", c.id), { ...patch, updatedAt: serverTimestamp() });

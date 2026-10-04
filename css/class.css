@@ -109,14 +109,23 @@ button{font:inherit;color:inherit;cursor:pointer}
 .drop.busy{opacity:.6;pointer-events:none}
 .drop-prev{flex:none;width:128px;aspect-ratio:16/9;border-radius:8px;background:var(--line) center/cover no-repeat}
 .drop-prev.pdf{display:flex;align-items:center;justify-content:center;width:72px;aspect-ratio:3/4;font-size:.8rem;letter-spacing:.1em;color:#fff;background:var(--pink-deep)}
-.drop-txt{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:.88rem}
+.drop-txt{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:.84rem}
+.drop-txt .hint{font-size:.72rem;line-height:1.5}   /* 안내 문구는 작게 */
 .drop + div{margin-top:8px}
-#cFiles{display:flex;flex-direction:column;gap:22px}
+/* 썸네일 | 도안 좌우 두 칸(좁은 화면은 위아래) */
+.file-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+@media(max-width:760px){.file-cols{grid-template-columns:1fr}}
+.drop.drop-v{flex-direction:column;align-items:stretch;gap:10px;padding:10px}   /* 썸네일: 위 = 큰 미리보기, 아래 = 안내 */
+.drop.drop-v .drop-prev{width:100%}
+#patDrop{padding:10px 12px;gap:12px}
+#patDrop .drop-prev.pdf{width:40px;font-size:.62rem;letter-spacing:.06em}
+.pat-acts{display:flex;gap:4px;flex:none}
+.pat-none{margin-top:8px;font-size:.74rem}
 /* 강의실 → 강좌 상세로 돌아가기 */
 .back-link{display:block;width:max-content;margin-bottom:12px;font-size:.8rem;color:var(--muted)}
 .back-link:hover{color:var(--pink-deep)}
 .pat-list{list-style:none;margin:8px 0 0;padding:0;border-top:1px solid var(--line)}
-.pat-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.pat-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:.82rem;color:var(--ink)}
 .pat-list li > span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* 강좌 상세 "도안" 줄 [도안 내려받기] — 받을 수 없는 사람(비회원·미수강)은 흐리게·누를 수 없음 */
 .pat-open:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
@@ -175,6 +184,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.84rem}
 .field input:focus,.field textarea:focus,.field select:focus{outline:2px solid var(--sage);outline-offset:-1px;border-color:var(--sage)}
 .field textarea{min-height:90px;resize:vertical}
 .check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--ink)}
+.field .check input{width:auto;flex:none;padding:0}   /* 입력칸 폭(100%)이 체크박스에 걸려 글자가 한 글자씩 꺾이던 것 */
 .hint{font-size:.74rem;color:var(--muted)}
 .cat-checks{display:flex;flex-wrap:wrap;gap:8px 18px;margin:2px 0 2px;color:var(--ink)}   /* 관리자: 강좌 카테고리 고르기 */
 .split{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}

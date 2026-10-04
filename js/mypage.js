@@ -5,14 +5,14 @@ import {
   auth, db, doc, getDoc, getDocs, updateDoc, deleteDoc, collection, query, where, orderBy,
   serverTimestamp, Timestamp, updateProfile, EmailAuthProvider, reauthenticateWithCredential,
   reauthenticateWithPopup, GoogleAuthProvider, updatePassword, deleteUser, signOut,
-} from "./firebase.js?v=13";
+} from "./firebase.js?v=14";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast, dialog, authMsg,
   KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate, refreshAuthArea, modeTagsHtml, titleHtml,
-} from "./common.js?v=13";
-import { enrollState, canExtend, daysLeft, fmtLeft, fmtPeriod, endSortKey, noEnd, courseStat, fmtPct, fmtDate, DAY } from "./core.js?v=13";
-import { mountCategories } from "./course-list.js?v=13";
-import { patternsOf, openPatternDialog } from "./files.js?v=13";
+} from "./common.js?v=14";
+import { enrollState, canExtend, daysLeft, fmtLeft, fmtPeriod, endSortKey, noEnd, courseStat, fmtPct, fmtDate, DAY } from "./core.js?v=14";
+import { mountCategories } from "./course-list.js?v=14";
+import { patternsOf, openPatternDialog } from "./files.js?v=14";
 
 initShell({ active: "mypage", kakao: false });
 const box = $("#my");

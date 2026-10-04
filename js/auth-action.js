@@ -5,9 +5,9 @@
 // ※ Firebase 콘솔 Authentication > 템플릿 > '작업 URL 맞춤설정' = https://www.bellaonart.com/auth/action.html
 import {
   auth, CONFIGURED, applyActionCode, checkActionCode, verifyPasswordResetCode, confirmPasswordReset,
-} from "./firebase.js?v=13";
-import { initShell, $, esc, login, watchUser, notConfiguredHtml } from "./common.js?v=13";
-import { t, tv } from "./i18n.js?v=13";
+} from "./firebase.js?v=14";
+import { initShell, $, esc, login, watchUser, notConfiguredHtml } from "./common.js?v=14";
+import { t, tv } from "./i18n.js?v=14";
 
 initShell({ kakao: false });
 const box = $("#act");

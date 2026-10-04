@@ -6,16 +6,16 @@
 // - 무료 강좌(수강료 0·0원·무료): 인증된 회원이 열면 수강권(기간 제한 없음)을 자동으로 받고 바로 강의실 — claimFree
 import {
   db, CONFIGURED, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, orderBy, serverTimestamp, Timestamp, redeemCode,
-} from "./firebase.js?v=13";
+} from "./firebase.js?v=14";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast,
   notConfiguredHtml, KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate, modeTagsHtml, titleHtml,
-} from "./common.js?v=13";
+} from "./common.js?v=14";
 import { enrollState, fmtLeft, fmtPeriod, lessonStat, courseStat, fmtDur, fmtPct, fmtDate, courseDays, fmtPrice, isFreePrice,
-  startOfKstDay, kstDateStr, modesOf, isOfflineOnly } from "./core.js?v=13";
-import { LessonTracker } from "./youtube.js?v=13";
-import { patternsOf, openPatternDialog } from "./files.js?v=13";
-import { t, tv, onLangChange } from "./i18n.js?v=13";
+  startOfKstDay, kstDateStr, modesOf, isOfflineOnly } from "./core.js?v=14";
+import { LessonTracker } from "./youtube.js?v=14";
+import { patternsOf, openPatternDialog } from "./files.js?v=14";
+import { t, tv, onLangChange } from "./i18n.js?v=14";
 
 initShell({ active: "workshop" });
 const app = $("#app");
