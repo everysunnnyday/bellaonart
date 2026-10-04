@@ -3,7 +3,7 @@
 // - 내용의 유일한 기준. 두 페이지 모두 <div id="art-sections"></div> 자리에 이걸로 그린다.
 // - 사진 넣는 법: 아래 PORTFOLIO 목록에 '/images/portfolio/파일명' 추가 (권장 3:4 세로, 900x1200)
 // =========================================================
-import { t, applyLang, onLangChange } from "./i18n.js?v=8";
+import { t, applyLang, onLangChange } from "./i18n.js?v=9";
 
 // 화면용 = 가벼운 WebP(2026-10-04, PNG 의 약 6%) · 같은 이름의 PNG 원본은 공유 미리보기(og:image)용으로 남겨 둠
 const PORTFOLIO = [

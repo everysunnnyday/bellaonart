@@ -1,11 +1,12 @@
 // =========================================================
 // 파일 창고(Firebase Storage) — 도안 PDF · 강좌 썸네일 (2026-10-04)
-// - 관리자·강의실·마이페이지만 불러온다(메인 등 공개 페이지가 이 부품을 받지 않게 firebase.js 와 분리)
+// - 관리자·강좌 상세/강의실·마이페이지만 불러온다(메인 등 공개 페이지가 이 부품을 받지 않게 firebase.js 와 분리)
 // - 권한은 firebase/storage.rules: 도안 = 관리자 + 유효 수강권 회원만 받기 · 썸네일 = 누구나 보기 · 올리기는 관리자만
-// - 강좌 문서에는 파일 정보만: pattern = { name, size, updatedAt } · thumb = 그림 주소 · thumbPath = 창고 안 위치
+// - 강좌 문서에는 파일 정보만: patterns = [{ id, name, size, updatedAt }] · thumb = 그림 주소 · thumbPath = 창고 안 위치
 // =========================================================
-import { app, IS_EMU } from "./firebase.js?v=8";
-import { toast, esc } from "./common.js?v=8";
+import { app, IS_EMU } from "./firebase.js?v=9";
+import { toast, esc, dialog } from "./common.js?v=9";
+import { t } from "./i18n.js?v=9";
 import {
   getStorage, connectStorageEmulator, ref, uploadBytes, getDownloadURL, deleteObject,
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js";
@@ -45,6 +46,16 @@ export async function downloadPattern(cid, id) {
 // 수강생 [도안 내려받기] 버튼 묶음 — 강의실 옆칸·마이페이지가 같이 쓴다(파일마다 버튼 하나, 파일 이름 표시)
 export const patternButtonsHtml = (cid, course, cls = "btn") => patternsOf(course).map((p) =>
   `<button type="button" class="${cls}" data-pat-c="${esc(cid)}" data-pat-id="${esc(p.id)}" title="도안 내려받기: ${esc(p.name)}">↓ ${esc(p.name.replace(/\.pdf$/i, ""))}</button>`).join("");
+// 강좌 상세 "도안" 줄의 [도안 내려받기] → 팝업에 도안 목록 · 파일마다 [내려받기] (2026-10-04 써니님) — 공용 확인창(common.js dialog) 사용
+export function openPatternDialog(cid, course) {
+  const list = patternsOf(course);
+  dialog({
+    title: t("도안 내려받기", "cd.patDl"), ok: t("닫기", "dlg.close"), cancel: "",
+    body: `<ul class="pat-pop">${list.map((p) => `<li><span class="nm">${esc(p.name)} <small>${fmtSize(p.size)}</small></span>
+      <button type="button" class="btn sage sm" data-pat-c="${esc(cid)}" data-pat-id="${esc(p.id)}">${t("내려받기", "cd.dlOne")}</button></li>`).join("")}</ul>`,
+  });
+  bindPatternButtons([...document.querySelectorAll(".dlg-wrap")].pop());   // 방금 열린 팝업 안의 버튼
+}
 export const bindPatternButtons = (root) => root.querySelectorAll("[data-pat-id]").forEach((b) => {
   b.onclick = () => patternDownload(b, b.dataset.patC, b.dataset.patId);
 });

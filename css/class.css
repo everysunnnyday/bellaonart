@@ -42,15 +42,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 /* ---------- 강좌 목록 ---------- */
 .course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:clamp(18px,3vw,30px)}
-.course-card{display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s}
-.course-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
-.course-card .thumb{aspect-ratio:16/10;background:var(--line) center/cover no-repeat}
-.course-card .body{padding:18px 20px 22px;display:flex;flex-direction:column;gap:6px;flex:1}
-.course-card h3{font-family:var(--serif);font-weight:500;font-size:1.3rem;line-height:1.3}
-.course-card .meta{font-size:.78rem;color:var(--muted)}
-.course-card .sum{font-size:.88rem;color:var(--ink-soft)}
-.course-card .foot{margin-top:auto;padding-top:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.course-card .price{font-size:.88rem;color:var(--ink)}
 
 /* ---------- 내 강의실 ---------- */
 .my-list{display:flex;flex-direction:column;gap:16px}
@@ -127,6 +118,15 @@ button{font:inherit;color:inherit;cursor:pointer}
 .pat-list{list-style:none;margin:8px 0 0;padding:0;border-top:1px solid var(--line)}
 .pat-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.88rem}
 .pat-list li > span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 강좌 상세 "도안" 줄 [도안 내려받기] — 받을 수 없는 사람(비회원·미수강)은 흐리게·누를 수 없음 */
+.pat-open:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+/* 도안 팝업 목록(common.js dialog 안) */
+.pat-pop{list-style:none;margin:6px 0 0;padding:0;border-top:1px solid var(--line)}
+.pat-pop li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.pat-pop .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+.pat-pop small{color:var(--muted);font-size:.75rem}
+.pat-pop .btn{flex:none}
+.pat-pop .btn.sage:hover{color:#fff;border-color:var(--ink);background:var(--ink)}   /* 확인창 기본 hover(분홍 글씨) 대신 */
 /* 수강생: 도안 내려받기 버튼(강의실 옆칸 · 마이페이지) — 파일마다 하나, 긴 이름은 … */
 .pat-box{display:flex;flex-direction:column;gap:8px;margin-top:16px}
 .pat-box .btn,.my-item .acts [data-pat-id]{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis}

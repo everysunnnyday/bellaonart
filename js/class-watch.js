@@ -6,16 +6,16 @@
 // - 무료 강좌(수강료 0·0원·무료): 인증된 회원이 열면 수강권(기간 제한 없음)을 자동으로 받고 바로 강의실 — claimFree
 import {
   db, CONFIGURED, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, orderBy, serverTimestamp, Timestamp, redeemCode,
-} from "./firebase.js?v=8";
+} from "./firebase.js?v=9";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast,
   notConfiguredHtml, KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate,
-} from "./common.js?v=8";
+} from "./common.js?v=9";
 import { enrollState, fmtLeft, fmtPeriod, lessonStat, courseStat, fmtDur, fmtPct, fmtDate, courseDays, fmtPrice, isFreePrice,
-  startOfKstDay, kstDateStr } from "./core.js?v=8";
-import { LessonTracker } from "./youtube.js?v=8";
-import { patternsOf, patternButtonsHtml, bindPatternButtons } from "./files.js?v=8";
-import { t, tv, onLangChange } from "./i18n.js?v=8";
+  startOfKstDay, kstDateStr } from "./core.js?v=9";
+import { LessonTracker } from "./youtube.js?v=9";
+import { patternsOf, patternButtonsHtml, bindPatternButtons, openPatternDialog } from "./files.js?v=9";
+import { t, tv, onLangChange } from "./i18n.js?v=9";
 
 initShell({ active: "workshop" });
 const app = $("#app");
@@ -64,13 +64,16 @@ function renderDetail(state) {
   const total = lessons.reduce((s, l) => s + (l.durationSec || 0), 0);
   const days = policy && courseDays(course, policy);
   const free = isFreePrice(course.priceLabel);
+  const canDl = state === "enrolled" || state === "preview";   // 도안을 받을 수 있는 화면(수강 중 · 관리자)
   const facts = [
     course.priceLabel ? [t("수강료", "cd.price"), esc(fmtPrice(course.priceLabel, t("무료", "cd.free")))] : null,
     lessons.length ? [t("구성", "cd.parts"), tv("{n}강 · 총 {d}", "cd.partsVal", { n: lessons.length, d: fmtDur(total) })] : null,
     free ? [t("수강 기간", "cd.period"), t("기간 제한 없음", "cd.periodFree")]
       : days ? [t("수강 기간", "cd.period"), tv("{d}일 · 1회 무료 연장 +{e}일", "cd.periodVal", { d: days, e: policy.extendDays })] : null,
     course.materials ? [t("준비물", "cd.materials"), esc(course.materials)] : null,   // 관리자 입력(강좌마다)
-    patternsOf(course).length ? [t("도안", "cd.pattern"), tv("포함 · PDF {n}개 (수강생 내려받기)", "cd.patternVal", { n: patternsOf(course).length })] : null,   // 관리자가 PDF 를 올리면 자동
+    // 도안 = 관리자가 PDF 를 올리면 자동 · [도안 내려받기] → 팝업 목록 · 받을 수 없는 사람(비회원·미수강)은 흐리게·누를 수 없음
+    patternsOf(course).length ? [t("도안", "cd.pattern"), `<button type="button" class="btn sage sm pat-open" id="patOpen"${canDl ? ""
+      : ` disabled title="${t("수강생만 내려받을 수 있습니다", "cd.patOnly")}"`}>${t("도안 내려받기", "cd.patDl")}</button>`] : null,
   ].filter(Boolean);
   const desc = course.description || "";
 
@@ -93,6 +96,7 @@ function renderDetail(state) {
     </section>
   </article>`;
 
+  if (canDl && $("#patOpen")) $("#patOpen").onclick = () => openPatternDialog(cid, course);
   const act = $("#act");
   if (state === "login") {
     act.innerHTML = `<p class="d-msg">${free ? t("회원이면 누구나 무료로 수강할 수 있습니다. 로그인해 주세요.", "cd.freeLogin")
@@ -107,9 +111,7 @@ function renderDetail(state) {
     const started = Object.keys(progress?.lessons || {}).length > 0;
     const left = fmtLeft(enr.endAt, Date.now(), { today: t("오늘 종료", "left.today"), days: t("{d}일 남음", "left.days"), none: t("기간 제한 없음", "left.none") });
     act.innerHTML = `<p class="d-msg">${tv("수강 중입니다 · {left}", "cd.enrolled", { left })}</p>
-      <div class="btns"><a class="btn solid" id="roomBtn" href="${roomHref()}">${started ? t("이어보기", "cd.continue") : t("강의실 입장", "cd.enter")}</a></div>
-      ${patternsOf(course).length ? `<div class="pat-box"><span class="small muted">${t("도안 내려받기 (PDF)", "cd.patDl")}</span>${patternButtonsHtml(cid, course)}</div>` : ""}`;
-    bindPatternButtons(act);
+      <div class="btns"><a class="btn solid" id="roomBtn" href="${roomHref()}">${started ? t("이어보기", "cd.continue") : t("강의실 입장", "cd.enter")}</a></div>`;
     return;
   }
   if (state === "preview") {

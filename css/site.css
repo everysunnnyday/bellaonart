@@ -17,8 +17,6 @@ body{line-height:1.6;overflow-x:hidden;font-variant-numeric:lining-nums}
 
 /* ---------- 버튼 ---------- */
 .btn{display:inline-flex;align-items:center;gap:10px;font-size:.82rem;letter-spacing:.06em;padding:14px 26px;border-radius:999px;transition:.25s;font-family:var(--sans);cursor:pointer}
-.btn-solid{background:var(--ink);color:var(--canvas);border:1px solid var(--ink)}
-.btn-solid:hover{background:var(--sage-deep);border-color:var(--sage-deep)}
 .btn-ghost{border:1px solid var(--line);color:var(--ink)}
 .btn-ghost:hover{border-color:var(--pink-deep);color:var(--pink-deep)}
 .btn-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}

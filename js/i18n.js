@@ -89,8 +89,6 @@ export const EN = {
 
   // ---- Workshop ----
   "ws.loading": "Loading classes…",
-  "ws.empty": "New classes are coming soon.",
-  "ws.loadErr": "We couldn't load the classes. Please try again later.",
   "ws.enrolled": "Enrolled · {left}",
   "ws.expired": "Expired",
   "ws.meta": "{n} lessons · {min} min",
@@ -138,8 +136,9 @@ export const EN = {
   "cd.enrolled": "You're enrolled · {left}",
   "cd.enter": "Enter classroom",
   "cd.continue": "Continue",
-  "cd.patDl": "Download patterns (PDF)",
-  "cd.patternVal": "Included · {n} PDF file(s) (download for students)",
+  "cd.patDl": "Download patterns",
+  "cd.patOnly": "Available to enrolled students only",
+  "cd.dlOne": "Download",
   "cd.about": "About This Class",
   "cd.outline": "Curriculum",
   "cd.noLessons": "The lesson videos are being prepared.",

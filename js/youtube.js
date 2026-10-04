@@ -6,7 +6,7 @@
 //   · 15초마다 + 일시정지·끝·화면 전환 시 저장
 // - probeVideo: 관리자 페이지에서 유튜브 주소만으로 영상 길이·제목 읽기
 // =========================================================
-import { addSegment, isContinuous, lessonStat } from "./core.js?v=8";
+import { addSegment, isContinuous, lessonStat } from "./core.js?v=9";
 
 let ytReady = null;
 export function loadYT() {
