@@ -86,13 +86,24 @@
 @media(max-width:860px){.edu.course-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.edu.course-grid{grid-template-columns:1fr}}
 /* 카테고리 소개: 사진 왼쪽 · 글 오른쪽(휴대폰은 위아래). 글자 모양은 메인 About 과 같은 규칙 */
-.cat-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:clamp(28px,5vw,64px);align-items:center;max-width:1040px;margin:0 auto clamp(56px,7vw,96px)}
-.cat-intro .ci-img{aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:var(--line)}
-.cat-intro .ci-img img{width:100%;height:100%;object-fit:cover}
-.cat-intro h2{font-family:var(--serif);font-weight:400;font-size:clamp(1.2rem,2vw,1.55rem);line-height:1.5;color:var(--ink);margin-bottom:clamp(18px,2.4vw,28px);word-break:keep-all}
-.cat-intro p{font-family:var(--sans);font-size:.95rem;line-height:1.9;color:var(--muted);word-break:keep-all}
-.cat-intro p+p{margin-top:1.1em}
-@media(max-width:760px){.cat-intro{grid-template-columns:1fr}.cat-intro .ci-img{aspect-ratio:4/3}}
+/* 카테고리 소개(2026-10-04 개편): 넓은 화면 = 본문 폭(1040px, 아래 강의 목록과 같은 좌우 여백) 사진 판 위 오른쪽 빈 벽에 글
+   · 사진은 왼쪽 기준으로 판을 채움(꽃이 늘 왼쪽) · 판 높이 = 글 길이 · 좁은 화면 = 사진 → 글 순서로 쌓음 */
+.cat-intro{position:relative;max-width:1040px;margin:0 auto clamp(56px,7vw,96px);border-radius:12px;overflow:hidden;background:#aeb0af;min-height:560px;display:flex;align-items:center}
+.cat-intro .ci-img{position:absolute;inset:0}
+.cat-intro .ci-img img{width:100%;height:100%;object-fit:cover;object-position:left center}
+.cat-intro .ci-img::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(242,238,235,0) 45%,rgba(242,238,235,.28) 70%)}   /* 글 쪽만 아주 옅게 밝혀 읽기 쉽게 */
+.cat-intro .ci-text{position:relative;width:50%;margin-left:auto;padding:56px 52px 56px 0}
+.cat-intro h2{font-family:var(--serif);font-weight:400;font-size:clamp(1.2rem,2vw,1.55rem);line-height:1.5;color:var(--ink);margin-bottom:clamp(18px,2.4vw,26px);word-break:keep-all}
+.cat-intro p{font-family:var(--sans);font-size:.9rem;line-height:1.85;color:var(--ink);word-break:keep-all}
+.cat-intro p+p{margin-top:1em}
+@media(max-width:1099px){
+  .cat-intro{display:block;min-height:0;border-radius:0;overflow:visible;background:none}
+  .cat-intro .ci-img{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#aeb0af}
+  .cat-intro .ci-img::after{display:none}
+  .cat-intro .ci-text{width:auto;margin:0;padding:clamp(24px,4vw,36px) 0 0}
+  .cat-intro p{color:var(--muted)}
+}
+@media(max-width:640px){ .cat-intro .ci-img{aspect-ratio:1/1} }   /* 휴대폰: 정사각형으로 장미를 크게 */
 
 /* ---------- 하단 ---------- */
 .site-ft{border-top:1px solid var(--line);padding:30px 0;text-align:center;background:var(--canvas)}
