@@ -3,7 +3,7 @@
 //  - ?cat=paper-flower 등: 그 카테고리의 강의 목록(1차시 유튜브 썸네일 · 강좌 정보 · 내 수강 상태)
 // 카드·목록 코드는 js/course-list.js 한 곳(메인·마이페이지와 공용)
 import { initShell, initReveal, $ } from "./common.js";
-import { mountCategories, mountCategoryList, categoryOf } from "./course-list.js";
+import { mountCategories, mountCategoryList, categoryOf, introHtml } from "./course-list.js";
 import { t, onLangChange } from "./i18n.js";
 
 initShell({ active: "workshop" });
@@ -20,6 +20,13 @@ if (cat) {
   label(); onLangChange(label);
   head.appendChild(back);
   document.title = `${cat.title} | ${document.title}`;
+  // 카테고리 소개(사진 왼쪽 · 글 오른쪽) — 강의 목록 바로 위. 소개 글이 없는 카테고리는 아무것도 안 넣음
+  if (cat.intro) {
+    const intro = document.createElement("div");
+    $("#list").before(intro);
+    const draw = () => { intro.innerHTML = introHtml(cat); };
+    draw(); onLangChange(draw);
+  }
   mountCategoryList($("#list"), cat.id);
 } else {
   mountCategories($("#list"), { info: true });

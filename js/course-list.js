@@ -9,11 +9,37 @@ import { watchUser, esc, toEnr, initReveal, thumbOf } from "./common.js";
 import { enrollState, fmtLeft, fmtPrice } from "./core.js";
 import { t, tv, onLangChange } from "./i18n.js";
 
+// intro = 카테고리 강의 목록 위에 나오는 소개(사진 왼쪽 · 글 오른쪽). 한국어는 여기, 영문은 i18n.js(cat.<id>.*)
+//         소개가 없는 카테고리는 제목·목록만 보인다. 문단은 body 배열 한 칸 = 한 문단.
 export const CATEGORIES = [
   { id: "floral-art-design", title: "Floral Art & Design", img: "/images/class/MASTER.png" },
-  { id: "paper-flower", title: "Paper Flower", img: "/images/class/paper-flower.jpg" },
+  { id: "paper-flower", title: "Paper Flower", img: "/images/class/paper-flower.jpg",
+    intro: {   // 2026-10-04 써니님 제공 글
+      img: "/images/class/paper-flower-intro.webp",
+      head: "꽃을 들여다보고,<br>천천히 만들어가는 시간.",
+      body: [
+        "꽃 한 송이를 만들다 보면 평소에는 지나쳤던 모습들이 눈에 들어옵니다. 꽃잎이 휘어지는 방향, 겹쳐진 모양, 안쪽과 바깥쪽의 미묘한 색 차이까지. 페이퍼 플라워는 자연을 자세히 바라보는 데서 시작합니다.",
+        "그렇게 발견한 꽃의 매력에 나의 상상을 더합니다. 좋아하는 꽃을 실제 모습에 가깝게 만들기도 하고, 자연에는 없는 색을 입히거나 꽃잎의 모양을 바꾸기도 합니다. 닮게 만드는 즐거움과 자유롭게 바꾸는 즐거움, 그 사이에 페이퍼 플라워의 매력이 있습니다.",
+        "꽃잎을 다듬고 한 장씩 붙이는 데에는 시간이 걸립니다. 손을 움직이며 눈앞의 꽃에 집중하다 보면, 분주했던 생각도 조금씩 잦아듭니다. 서둘러 완성하기보다 꽃이 조금씩 모습을 갖춰가는 과정을 즐겨보세요.",
+        "직접 만든 꽃을 일상 가까이에 놓아보세요. 꽃을 바라볼 때마다 그 색을 고르고 손으로 다듬었던 시간도 함께 떠오를 거예요.",
+        "벨라온아트의 클래스에서 꽃을 바라보는 새로운 시선과 직접 만드는 즐거움을 만나보세요.",
+      ],
+    } },
   { id: "signature-coloring", title: "Signature Coloring", img: "/images/class/coloring.png" },
 ];
+
+// 카테고리 소개 HTML(소개가 없으면 빈 글자). 한/영은 i18n.js 의 cat.<id>.head / cat.<id>.p1… 키
+export function introHtml(cat) {
+  const it = cat?.intro;
+  if (!it) return "";
+  return `<div class="cat-intro">
+    <div class="ci-img"><img src="${esc(it.img)}" alt="${esc(cat.title)}"></div>
+    <div class="ci-text">
+      <h2>${t(it.head, `cat.${cat.id}.head`)}</h2>
+      ${it.body.map((p, i) => `<p>${t(esc(p), `cat.${cat.id}.p${i + 1}`)}</p>`).join("")}
+    </div>
+  </div>`;
+}
 export const categoryOf = (id) => CATEGORIES.find((c) => c.id === id) || null;
 const inCat = (course, cat) => Array.isArray(course.categories) && course.categories.includes(cat);
 
@@ -55,7 +81,8 @@ function listHtml(shown) {
   const list = courses.filter((c) => inCat(c, mode.cat));
   if (!list.length) return `<div class="empty">${t("강좌를 준비하고 있습니다. 곧 만나보실 수 있습니다.", "ws.catEmpty")}</div>`;
   const now = Date.now();
-  return `<div class="edu mfai">${list.map((c, i) => `<a class="card reveal${shown ? " in" : ""}" style="${delay(i)}" href="/class/watch.html?c=${encodeURIComponent(c.id)}">
+  // 강의 목록 카드 = 한 줄 3개 · 16:9 썸네일(1차시 유튜브 썸네일과 같은 비율이라 잘리지 않음) — 2026-10-04 써니님
+  return `<div class="edu course-grid">${list.map((c, i) => `<a class="card reveal${shown ? " in" : ""}" style="${delay(i)}" href="/class/watch.html?c=${encodeURIComponent(c.id)}">
       <div class="ph"><img src="${esc(thumbOf(c, c.id))}" alt="${esc(c.title)}"></div><h4>${esc(c.title)}</h4>${courseInfo(c, now)}</a>`).join("")}</div>`;
 }
 

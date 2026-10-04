@@ -98,6 +98,13 @@ export const EN = {
   "ws.count": "{n} classes",
   "ws.catEmpty": "Classes are being prepared. Please check back soon.",
   "ws.back": "← All Workshops",
+  // ---- 카테고리 소개 (js/course-list.js CATEGORIES intro) · 클로드 초안, 대표님 확인 필요 ----
+  "cat.paper-flower.head": "Looking closely at flowers,<br>and making them slowly.",
+  "cat.paper-flower.p1": "When you make a single flower, you begin to notice details you usually pass by — the way a petal curves, how the layers overlap, the subtle difference in color between the inside and the outside. Paper flowers begin with looking closely at nature.",
+  "cat.paper-flower.p2": "To the charm you discover, you add your own imagination. Sometimes you recreate a favorite flower as faithfully as you can; sometimes you give it a color nature never made, or reshape its petals. The joy of resemblance and the joy of free change — the charm of paper flowers lies somewhere in between.",
+  "cat.paper-flower.p3": "Shaping petals and attaching them one by one takes time. As your hands move and your attention settles on the flower in front of you, a busy mind slowly grows quiet. Rather than rushing to finish, enjoy watching the flower take shape little by little.",
+  "cat.paper-flower.p4": "Place the flower you made somewhere close to your everyday life. Each time you look at it, you will remember the time you spent choosing its colors and shaping it by hand.",
+  "cat.paper-flower.p5": "Discover a new way of seeing flowers, and the joy of making them yourself, in BELLAON ART's classes.",
   "left.days": "{d} days left",
   "left.today": "Ends today",
 
