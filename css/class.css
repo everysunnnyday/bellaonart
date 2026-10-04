@@ -113,7 +113,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .drop + div{margin-top:8px}
 #cFiles{display:flex;flex-direction:column;gap:22px}
 /* 강의실 → 강좌 상세로 돌아가기 */
-.back-link{display:inline-block;margin-bottom:12px;font-size:.8rem;color:var(--muted)}
+.back-link{display:block;width:max-content;margin-bottom:12px;font-size:.8rem;color:var(--muted)}
 .back-link:hover{color:var(--pink-deep)}
 .pat-list{list-style:none;margin:8px 0 0;padding:0;border-top:1px solid var(--line)}
 .pat-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.88rem}
@@ -127,9 +127,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .pat-pop small{color:var(--muted);font-size:.75rem}
 .pat-pop .btn{flex:none}
 .pat-pop .btn.sage:hover{color:#fff;border-color:var(--ink);background:var(--ink)}   /* 확인창 기본 hover(분홍 글씨) 대신 */
-/* 수강생: 도안 내려받기 버튼(강의실 옆칸 · 마이페이지) — 파일마다 하나, 긴 이름은 … */
+/* 강의실 옆칸 [도안 내려받기] — 누르면 팝업 목록(js/files.js openPatternDialog) */
 .pat-box{display:flex;flex-direction:column;gap:8px;margin-top:16px}
-.pat-box .btn,.my-item .acts [data-pat-id]{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.pat-box .btn{display:block;max-width:100%}
 
 /* 수강 신청(카카오톡) ↔ 수강 코드 등록 — 두 영역을 실선으로 나눈다(2026-10-04 써니님 첨부 3) */
 .d-act .d-expired{margin-bottom:12px}

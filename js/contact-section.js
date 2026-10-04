@@ -3,7 +3,7 @@
 // - 내용의 유일한 기준. 두 페이지 모두 <div id="contact-section"></div> 자리에 이걸로 그린다.
 // - 문의 폼은 Web3Forms (bellaon_art@naver.com 수신)
 // =========================================================
-import { t, applyLang } from "./i18n.js?v=9";
+import { t, applyLang } from "./i18n.js?v=10";
 
 const ICON = {
   // 전화기 모양 (예전엔 봉투 모양이었음 — 2026-10-03 써니님 요청으로 변경)

@@ -6,16 +6,16 @@
 // - 무료 강좌(수강료 0·0원·무료): 인증된 회원이 열면 수강권(기간 제한 없음)을 자동으로 받고 바로 강의실 — claimFree
 import {
   db, CONFIGURED, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, orderBy, serverTimestamp, Timestamp, redeemCode,
-} from "./firebase.js?v=9";
+} from "./firebase.js?v=10";
 import {
   initShell, watchUser, esc, $, toEnr, loadPolicy, login, toast,
   notConfiguredHtml, KAKAO_CHANNEL, thumbOf, needsVerify, verifyGateHtml, bindVerifyGate,
-} from "./common.js?v=9";
+} from "./common.js?v=10";
 import { enrollState, fmtLeft, fmtPeriod, lessonStat, courseStat, fmtDur, fmtPct, fmtDate, courseDays, fmtPrice, isFreePrice,
-  startOfKstDay, kstDateStr } from "./core.js?v=9";
-import { LessonTracker } from "./youtube.js?v=9";
-import { patternsOf, patternButtonsHtml, bindPatternButtons, openPatternDialog } from "./files.js?v=9";
-import { t, tv, onLangChange } from "./i18n.js?v=9";
+  startOfKstDay, kstDateStr } from "./core.js?v=10";
+import { LessonTracker } from "./youtube.js?v=10";
+import { patternsOf, openPatternDialog } from "./files.js?v=10";
+import { t, tv, onLangChange } from "./i18n.js?v=10";
 
 initShell({ active: "workshop" });
 const app = $("#app");
@@ -182,12 +182,12 @@ function renderRoom() {
       <div class="bar" id="cBar"><i></i></div>
       <div class="small muted" id="cMeta"></div>
       ${enr ? `<div class="small muted">수강 기간 ${fmtPeriod(enr)} · ${fmtLeft(enr.endAt, now)}</div>` : ""}
-      ${patternsOf(course).length ? `<div class="pat-box"><span class="small muted">도안 내려받기 (PDF)</span>${patternButtonsHtml(cid, course, "btn sage")}</div>` : ""}
+      ${patternsOf(course).length ? `<div class="pat-box"><button type="button" class="btn sage" id="patOpenRoom">도안 내려받기</button></div>` : ""}
       <ol class="lessons" id="lList"></ol>
     </aside>
   </div>`;
   buildList();
-  bindPatternButtons(app);
+  if ($("#patOpenRoom")) $("#patOpenRoom").onclick = () => openPatternDialog(cid, course);   // 상세와 같은 팝업 목록 → 골라서 받기
   $("#lList").addEventListener("click", (ev) => {
     const b = ev.target.closest("[data-l]");
     if (b && b.dataset.l !== curId) openLesson(b.dataset.l);

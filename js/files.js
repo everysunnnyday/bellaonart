@@ -4,9 +4,9 @@
 // - 권한은 firebase/storage.rules: 도안 = 관리자 + 유효 수강권 회원만 받기 · 썸네일 = 누구나 보기 · 올리기는 관리자만
 // - 강좌 문서에는 파일 정보만: patterns = [{ id, name, size, updatedAt }] · thumb = 그림 주소 · thumbPath = 창고 안 위치
 // =========================================================
-import { app, IS_EMU } from "./firebase.js?v=9";
-import { toast, esc, dialog } from "./common.js?v=9";
-import { t } from "./i18n.js?v=9";
+import { app, IS_EMU } from "./firebase.js?v=10";
+import { toast, esc, dialog } from "./common.js?v=10";
+import { t } from "./i18n.js?v=10";
 import {
   getStorage, connectStorageEmulator, ref, uploadBytes, getDownloadURL, deleteObject,
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js";
@@ -43,10 +43,8 @@ export const deletePattern = (cid, id) => deleteObject(patternRef(cid, id)).catc
 export async function downloadPattern(cid, id) {
   location.href = await getDownloadURL(patternRef(cid, id));
 }
-// 수강생 [도안 내려받기] 버튼 묶음 — 강의실 옆칸·마이페이지가 같이 쓴다(파일마다 버튼 하나, 파일 이름 표시)
-export const patternButtonsHtml = (cid, course, cls = "btn") => patternsOf(course).map((p) =>
-  `<button type="button" class="${cls}" data-pat-c="${esc(cid)}" data-pat-id="${esc(p.id)}" title="도안 내려받기: ${esc(p.name)}">↓ ${esc(p.name.replace(/\.pdf$/i, ""))}</button>`).join("");
-// 강좌 상세 "도안" 줄의 [도안 내려받기] → 팝업에 도안 목록 · 파일마다 [내려받기] (2026-10-04 써니님) — 공용 확인창(common.js dialog) 사용
+// [도안 내려받기] → 팝업에 도안 목록 · 파일마다 [내려받기] (2026-10-04 써니님) — 강좌 상세·강의실·마이페이지 모두 이 하나
+// 공용 확인창(common.js dialog) 사용 · 바로 받아지지 않고 목록에서 골라 받는다
 export function openPatternDialog(cid, course) {
   const list = patternsOf(course);
   dialog({
@@ -56,7 +54,7 @@ export function openPatternDialog(cid, course) {
   });
   bindPatternButtons([...document.querySelectorAll(".dlg-wrap")].pop());   // 방금 열린 팝업 안의 버튼
 }
-export const bindPatternButtons = (root) => root.querySelectorAll("[data-pat-id]").forEach((b) => {
+const bindPatternButtons = (root) => root.querySelectorAll("[data-pat-id]").forEach((b) => {
   b.onclick = () => patternDownload(b, b.dataset.patC, b.dataset.patId);
 });
 async function patternDownload(btn, cid, id) {
